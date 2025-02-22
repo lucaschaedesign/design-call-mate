@@ -5,8 +5,8 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar.events', 'https://www.
 
 export function initiateGoogleAuth() {
   try {
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=${SCOPES.join(' ')}&prompt=consent`;
-    console.log('Redirecting to:', authUrl); // Debug log
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=${SCOPES.join(' ')}&prompt=consent&access_type=online`;
+    console.log('Redirecting to:', authUrl);
     window.location.href = authUrl;
   } catch (error) {
     console.error('Auth initialization error:', error);
@@ -20,6 +20,7 @@ export function handleAuthCallback() {
     if (hash) {
       const params = new URLSearchParams(hash.substring(1));
       const accessToken = params.get('access_token');
+      const expiresIn = params.get('expires_in');
       const error = params.get('error');
       
       if (error) {
@@ -27,8 +28,10 @@ export function handleAuthCallback() {
         return false;
       }
       
-      if (accessToken) {
+      if (accessToken && expiresIn) {
+        const expirationTime = Date.now() + Number(expiresIn) * 1000;
         localStorage.setItem('google_access_token', accessToken);
+        localStorage.setItem('token_expiration', expirationTime.toString());
         window.history.pushState('', document.title, window.location.pathname);
         return true;
       }
@@ -41,5 +44,26 @@ export function handleAuthCallback() {
 }
 
 export function isAuthenticated() {
-  return !!localStorage.getItem('google_access_token');
+  const token = localStorage.getItem('google_access_token');
+  const expiration = localStorage.getItem('token_expiration');
+  
+  if (!token || !expiration) {
+    return false;
+  }
+
+  // Check if token is expired (with 5 minute buffer)
+  const isExpired = Date.now() > (Number(expiration) - 300000); // 5 minutes buffer
+  if (isExpired) {
+    localStorage.removeItem('google_access_token');
+    localStorage.removeItem('token_expiration');
+    return false;
+  }
+
+  return true;
 }
+
+export function clearAuth() {
+  localStorage.removeItem('google_access_token');
+  localStorage.removeItem('token_expiration');
+}
+

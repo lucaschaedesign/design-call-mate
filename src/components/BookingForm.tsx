@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { User, Mail, MessageSquare } from "lucide-react";
 import { createCalendarEvent, calculateEndTime, formatStartTime } from "@/lib/calendar";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingData } from "@/lib/chat";
+import { clearAuth } from "@/lib/googleAuth";
 
 interface BookingFormProps {
   selectedDate?: string;
@@ -92,10 +92,21 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
         description: "Your discovery call has been scheduled. Check your email for the calendar invite.",
       });
 
-      // Reset form
       setFormData({ name: '', email: '', message: '' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Booking error:', error);
+      
+      if (error.message?.includes('authentication') || error.status === 401) {
+        clearAuth();
+        toast({
+          title: "Authentication Error",
+          description: "Your session has expired. Please refresh the page to reconnect with Google Calendar.",
+          variant: "destructive"
+        });
+        setTimeout(() => window.location.reload(), 2000);
+        return;
+      }
+
       toast({
         title: "Booking Failed",
         description: "There was an error scheduling your call. Please try again.",
