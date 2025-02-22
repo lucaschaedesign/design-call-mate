@@ -17,10 +17,16 @@ interface BookingFormProps {
   bookingData?: BookingData;
 }
 
+interface FormData {
+  name: string;
+  email: string;
+  message: string;
+}
+
 export function BookingForm({ selectedDate, selectedTime, selectedDuration, bookingData }: BookingFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     message: ''
@@ -31,7 +37,7 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
-  const formatEventDescription = (formData: typeof formData, bookingData: BookingData) => {
+  const formatEventDescription = (formData: FormData, bookingData: BookingData) => {
     const sections = [
       "📝 Project Details",
       `Business Name: ${bookingData.businessName || 'N/A'}`,
