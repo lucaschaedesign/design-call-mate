@@ -10,7 +10,7 @@ import { createCalendarEvent, calculateEndTime, formatStartTime } from "@/lib/ca
 import { useToast } from "@/components/ui/use-toast";
 
 interface BookingFormProps {
-  selectedDate?: Date;
+  selectedDate?: string;
   selectedTime?: string;
   selectedDuration: number;
 }
@@ -44,18 +44,19 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration }: Bo
     setIsSubmitting(true);
     
     try {
-      const startTime = formatStartTime(selectedDate, selectedTime);
-      const endTime = calculateEndTime(selectedDate, selectedTime, selectedDuration);
+      const date = new Date(selectedDate);
+      const startTime = formatStartTime(date, selectedTime);
+      const endTime = calculateEndTime(date, selectedTime, selectedDuration);
 
       const response = await createCalendarEvent({
         summary: `Discovery Call with ${formData.name}`,
         description: formData.message || 'Initial discovery call to discuss project needs.',
         startTime,
         endTime,
-        attendees: [formData.email, 'hi@lucaschae.com'],
+        attendees: [formData.email]
       });
 
-      console.log('Calendar event created:', response); // Debug log
+      console.log('Calendar event created:', response);
 
       toast({
         title: "Success!",
@@ -75,6 +76,8 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration }: Bo
       setIsSubmitting(false);
     }
   };
+
+  const isFormValid = formData.name && formData.email && selectedDate && selectedTime;
 
   return (
     <Card className="w-full max-w-4xl mx-auto p-6 mt-8 shadow-lg animate-fade-up">
@@ -132,7 +135,7 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration }: Bo
           type="submit" 
           className="w-full md:w-auto" 
           size="lg"
-          disabled={isSubmitting || !selectedDate || !selectedTime}
+          disabled={!isFormValid || isSubmitting}
         >
           {isSubmitting ? "Scheduling..." : "Schedule Discovery Call"}
         </Button>

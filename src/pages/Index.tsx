@@ -55,14 +55,14 @@ const Index = () => {
           <ChatInterface onComplete={handleChatComplete} />
         ) : (
           <BookingForm 
-            selectedDate={undefined}
-            selectedTime={undefined}
+            selectedDate={bookingData?.meetingDate}
+            selectedTime={bookingData?.meetingTime}
             selectedDuration={30}
           />
         )}
       </div>
     </div>
   );
-};
+}
 
 export default Index;
