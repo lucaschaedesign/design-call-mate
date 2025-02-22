@@ -26,6 +26,10 @@ interface Booking {
   message?: string;
 }
 
+interface SecretResponse {
+  secret: string;
+}
+
 export default function Dashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +61,7 @@ export default function Dashboard() {
     
     try {
       // Get the API key from Supabase
-      const { data: secretData, error } = await supabase.rpc('get_secret', {
+      const { data: secretData, error } = await supabase.rpc<SecretResponse>('get_secret', {
         name: 'ELEVENLABS_API_KEY'
       });
 
@@ -73,7 +77,7 @@ export default function Dashboard() {
       });
 
       // Check if there are any conversations
-      if (!conversations || !conversations.conversations || conversations.conversations.length === 0) {
+      if (!conversations?.conversations?.[0]) {
         throw new Error('No conversations found');
       }
 
@@ -82,17 +86,21 @@ export default function Dashboard() {
       
       // Get conversation details
       const conversationDetails = await client.conversationalAi.getConversation(
-        latestConversation.id
+        latestConversation.conversation_id
       );
 
       if (!conversationDetails?.transcript) {
         throw new Error('No transcript found');
       }
 
-      // Update the transcript state
+      // Update the transcript state with proper type conversion
+      const transcriptText = Array.isArray(conversationDetails.transcript) 
+        ? conversationDetails.transcript.map(t => t.text).join('\n')
+        : conversationDetails.transcript.toString();
+
       setTranscripts(prev => ({
         ...prev,
-        [bookingId]: conversationDetails.transcript.toString()
+        [bookingId]: transcriptText
       }));
 
       toast.success('Transcript loaded successfully');
