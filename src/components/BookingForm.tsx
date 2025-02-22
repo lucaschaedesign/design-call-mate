@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -68,10 +67,9 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
 
   const storeScheduledCall = async (calendarEventId: string) => {
     const { error } = await supabase
-      .from('scheduled_calls')
+      .from('bookings')
       .insert({
         google_event_id: calendarEventId,
-        host_email: 'hi@lucaschae.com',
         client_email: formData.email,
         client_name: formData.name,
         meeting_date: selectedDate,
