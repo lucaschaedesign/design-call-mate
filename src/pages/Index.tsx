@@ -58,6 +58,7 @@ const Index = () => {
             selectedDate={bookingData?.meetingDate}
             selectedTime={bookingData?.meetingTime}
             selectedDuration={30}
+            bookingData={bookingData}
           />
         )}
       </div>

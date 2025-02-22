@@ -8,14 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { User, Mail, MessageSquare } from "lucide-react";
 import { createCalendarEvent, calculateEndTime, formatStartTime } from "@/lib/calendar";
 import { useToast } from "@/components/ui/use-toast";
+import { BookingData } from "@/lib/chat";
 
 interface BookingFormProps {
   selectedDate?: string;
   selectedTime?: string;
   selectedDuration: number;
+  bookingData?: BookingData;
 }
 
-export function BookingForm({ selectedDate, selectedTime, selectedDuration }: BookingFormProps) {
+export function BookingForm({ selectedDate, selectedTime, selectedDuration, bookingData }: BookingFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -27,6 +29,25 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration }: Bo
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const formatEventDescription = (formData: typeof formData, bookingData: BookingData) => {
+    const sections = [
+      "📝 Project Details",
+      `Business Name: ${bookingData.businessName || 'N/A'}`,
+      `Industry: ${bookingData.industry || 'N/A'}`,
+      `Project Type: ${Array.isArray(bookingData.projectType) ? bookingData.projectType.join(', ') : bookingData.projectType || 'N/A'}`,
+      `Project Size: ${bookingData.projectSize || 'N/A'}`,
+      `Timeline: ${bookingData.timeline || 'N/A'}`,
+      `Budget Range: ${bookingData.budget || 'N/A'}`,
+      "",
+      "💬 Additional Notes",
+      formData.message || 'No additional notes provided.',
+      "",
+      "This discovery call has been automatically scheduled through our booking system."
+    ];
+
+    return sections.join('\n');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,9 +69,11 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration }: Bo
       const startTime = formatStartTime(date, selectedTime);
       const endTime = calculateEndTime(date, selectedTime, selectedDuration);
 
+      const eventDescription = formatEventDescription(formData, bookingData || {});
+
       const response = await createCalendarEvent({
-        summary: `Discovery Call with ${formData.name}`,
-        description: formData.message || 'Initial discovery call to discuss project needs.',
+        summary: `Discovery Call with ${formData.name} - ${bookingData?.businessName || 'New Client'}`,
+        description: eventDescription,
         startTime,
         endTime,
         attendees: [formData.email]
@@ -117,7 +140,7 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration }: Bo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="message">Message (Optional)</Label>
+            <Label htmlFor="message">Additional Notes (Optional)</Label>
             <div className="flex items-start gap-2">
               <MessageSquare className="w-4 h-4 text-booking-400 mt-2" />
               <Textarea
