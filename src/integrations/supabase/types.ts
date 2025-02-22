@@ -9,7 +9,98 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          budget: string | null
+          business_name: string | null
+          client_email: string
+          client_name: string
+          created_at: string | null
+          duration: number
+          google_event_id: string | null
+          host_id: string
+          id: string
+          industry: string | null
+          meeting_date: string
+          meeting_time: string
+          message: string | null
+          project_size: string | null
+          project_type: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          timeline: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          budget?: string | null
+          business_name?: string | null
+          client_email: string
+          client_name: string
+          created_at?: string | null
+          duration?: number
+          google_event_id?: string | null
+          host_id: string
+          id?: string
+          industry?: string | null
+          meeting_date: string
+          meeting_time: string
+          message?: string | null
+          project_size?: string | null
+          project_type?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          timeline?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          budget?: string | null
+          business_name?: string | null
+          client_email?: string
+          client_name?: string
+          created_at?: string | null
+          duration?: number
+          google_event_id?: string | null
+          host_id?: string
+          id?: string
+          industry?: string | null
+          meeting_date?: string
+          meeting_time?: string
+          message?: string | null
+          project_size?: string | null
+          project_type?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          timeline?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "hosts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hosts: {
+        Row: {
+          created_at: string | null
+          email: string
+          google_calendar_token: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          google_calendar_token?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          google_calendar_token?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +109,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      booking_status: "pending" | "confirmed" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
