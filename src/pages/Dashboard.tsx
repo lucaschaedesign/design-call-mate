@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState('calls');
 
   useEffect(() => {
     async function fetchBookings() {
@@ -59,102 +60,132 @@ export default function Dashboard() {
     }
   };
 
+  const renderContent = () => {
+    switch (activeView) {
+      case 'boards':
+        return (
+          <div className="h-screen pt-6 pr-6">
+            <iframe 
+              src="https://scope-scribe-automator.lovable.app/"
+              className="w-full h-full rounded-lg border"
+              title="Project Boards"
+            />
+          </div>
+        );
+      
+      case 'settings':
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Settings</h2>
+            <p className="text-gray-500">Settings page coming soon...</p>
+          </div>
+        );
+      
+      default: // 'calls'
+        return (
+          <div className="p-8">
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Calls</h2>
+              
+              {loading ? (
+                <div>Loading bookings...</div>
+              ) : bookings.length === 0 ? (
+                <Card className="p-6">
+                  <p className="text-center text-gray-500">No bookings found</p>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {bookings.map((booking) => {
+                    const status = getCallStatus(booking);
+                    const isExpanded = expandedBooking === booking.id;
+
+                    return (
+                      <Card key={booking.id} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div>
+                              <h3 className="font-medium">{booking.client_name}</h3>
+                              <p className="text-sm text-gray-500">{booking.client_email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-8">
+                            <div className="text-sm">
+                              <div className="font-medium">
+                                {format(new Date(booking.meeting_date), "MMM dd")}
+                              </div>
+                              <div className="text-gray-500">
+                                {booking.meeting_time} (30 min)
+                              </div>
+                            </div>
+                            <div className={`text-sm font-medium ${status.color}`}>
+                              {status.label}
+                            </div>
+                            <button
+                              onClick={() => setExpandedBooking(isExpanded ? null : booking.id)}
+                              className="text-sm text-gray-500 hover:text-gray-700"
+                            >
+                              {isExpanded ? "collapse" : "view detail"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {isExpanded && (
+                          <div className="mt-4 pt-4 border-t">
+                            <Tabs defaultValue="details">
+                              <TabsList>
+                                <TabsTrigger value="details">Booking Details</TabsTrigger>
+                                <TabsTrigger value="transcript">Call Transcript</TabsTrigger>
+                              </TabsList>
+                              <TabsContent value="details" className="mt-4">
+                                <div className="space-y-4">
+                                  {booking.business_name && (
+                                    <div>
+                                      <h4 className="text-sm font-medium">Business Name</h4>
+                                      <p className="text-sm text-gray-600">{booking.business_name}</p>
+                                    </div>
+                                  )}
+                                  {booking.industry && (
+                                    <div>
+                                      <h4 className="text-sm font-medium">Industry</h4>
+                                      <p className="text-sm text-gray-600">{booking.industry}</p>
+                                    </div>
+                                  )}
+                                  {booking.project_type && (
+                                    <div>
+                                      <h4 className="text-sm font-medium">Project Type</h4>
+                                      <p className="text-sm text-gray-600">{booking.project_type}</p>
+                                    </div>
+                                  )}
+                                  {booking.message && (
+                                    <div>
+                                      <h4 className="text-sm font-medium">Additional Information</h4>
+                                      <p className="text-sm text-gray-600">{booking.message}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </TabsContent>
+                              <TabsContent value="transcript" className="mt-4">
+                                <p className="text-sm text-gray-500">Call transcript and summary will be added after the call.</p>
+                              </TabsContent>
+                            </Tabs>
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <DashboardSidebar />
-      <div className="flex-1 p-8">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Calls</h2>
-          
-          {loading ? (
-            <div>Loading bookings...</div>
-          ) : bookings.length === 0 ? (
-            <Card className="p-6">
-              <p className="text-center text-gray-500">No bookings found</p>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {bookings.map((booking) => {
-                const status = getCallStatus(booking);
-                const isExpanded = expandedBooking === booking.id;
-
-                return (
-                  <Card key={booking.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div>
-                          <h3 className="font-medium">{booking.client_name}</h3>
-                          <p className="text-sm text-gray-500">{booking.client_email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-8">
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            {format(new Date(booking.meeting_date), "MMM dd")}
-                          </div>
-                          <div className="text-gray-500">
-                            {booking.meeting_time} (30 min)
-                          </div>
-                        </div>
-                        <div className={`text-sm font-medium ${status.color}`}>
-                          {status.label}
-                        </div>
-                        <button
-                          onClick={() => setExpandedBooking(isExpanded ? null : booking.id)}
-                          className="text-sm text-gray-500 hover:text-gray-700"
-                        >
-                          {isExpanded ? "collapse" : "view detail"}
-                        </button>
-                      </div>
-                    </div>
-
-                    {isExpanded && (
-                      <div className="mt-4 pt-4 border-t">
-                        <Tabs defaultValue="details">
-                          <TabsList>
-                            <TabsTrigger value="details">Booking Details</TabsTrigger>
-                            <TabsTrigger value="transcript">Call Transcript</TabsTrigger>
-                          </TabsList>
-                          <TabsContent value="details" className="mt-4">
-                            <div className="space-y-4">
-                              {booking.business_name && (
-                                <div>
-                                  <h4 className="text-sm font-medium">Business Name</h4>
-                                  <p className="text-sm text-gray-600">{booking.business_name}</p>
-                                </div>
-                              )}
-                              {booking.industry && (
-                                <div>
-                                  <h4 className="text-sm font-medium">Industry</h4>
-                                  <p className="text-sm text-gray-600">{booking.industry}</p>
-                                </div>
-                              )}
-                              {booking.project_type && (
-                                <div>
-                                  <h4 className="text-sm font-medium">Project Type</h4>
-                                  <p className="text-sm text-gray-600">{booking.project_type}</p>
-                                </div>
-                              )}
-                              {booking.message && (
-                                <div>
-                                  <h4 className="text-sm font-medium">Additional Information</h4>
-                                  <p className="text-sm text-gray-600">{booking.message}</p>
-                                </div>
-                              )}
-                            </div>
-                          </TabsContent>
-                          <TabsContent value="transcript" className="mt-4">
-                            <p className="text-sm text-gray-500">Call transcript and summary will be added after the call.</p>
-                          </TabsContent>
-                        </Tabs>
-                      </div>
-                    )}
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
+      <DashboardSidebar activeView={activeView} onViewChange={setActiveView} />
+      <div className="flex-1">
+        {renderContent()}
       </div>
     </div>
   );

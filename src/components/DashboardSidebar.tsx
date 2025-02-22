@@ -24,7 +24,12 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
   </button>
 );
 
-export function DashboardSidebar() {
+interface DashboardSidebarProps {
+  activeView: string;
+  onViewChange: (view: string) => void;
+}
+
+export function DashboardSidebar({ activeView, onViewChange }: DashboardSidebarProps) {
   return (
     <div className="w-64 bg-white border-r min-h-screen p-4">
       <div className="mb-8">
@@ -34,15 +39,20 @@ export function DashboardSidebar() {
         <SidebarItem 
           icon={CalendarDays} 
           label="Upcoming Calls" 
-          active={true} 
+          active={activeView === 'calls'}
+          onClick={() => onViewChange('calls')}
         />
         <SidebarItem 
           icon={LayoutGrid} 
           label="Project Boards" 
+          active={activeView === 'boards'}
+          onClick={() => onViewChange('boards')}
         />
         <SidebarItem 
           icon={Settings} 
           label="Settings" 
+          active={activeView === 'settings'}
+          onClick={() => onViewChange('settings')}
         />
       </nav>
     </div>
