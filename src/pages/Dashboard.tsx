@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -23,12 +24,6 @@ interface Booking {
   budget?: string;
   timeline?: string;
   message?: string;
-}
-
-interface ConversationResponse {
-  id: string;
-  transcript: string;
-  // ... other fields
 }
 
 export default function Dashboard() {
@@ -62,32 +57,37 @@ export default function Dashboard() {
     
     try {
       // Get the API key from Supabase
-      const { data: { secret: apiKey } } = await supabase.rpc('get_secret', {
+      const { data, error } = await supabase.rpc('get_secret', {
         name: 'ELEVENLABS_API_KEY'
       });
 
-      if (!apiKey) {
-        throw new Error('API key not found');
+      if (error || !data?.secret) {
+        throw new Error('Failed to retrieve API key');
       }
 
-      const client = new ElevenLabsClient({ apiKey });
+      const client = new ElevenLabsClient({ apiKey: data.secret });
 
       // Get conversations
       const conversations = await client.conversationalAi.getConversations({
         agent_id: "Niup5RvSzU7eQ7F9X4MW"
       });
 
-      if (!conversations || conversations.length === 0) {
+      // Check if there are any conversations
+      if (!conversations || !Array.isArray(conversations.conversations) || conversations.conversations.length === 0) {
         throw new Error('No conversations found');
       }
 
       // Get the latest conversation
-      const latestConversation = conversations[0];
+      const latestConversation = conversations.conversations[0];
       
       // Get conversation details
-      const conversationDetails: ConversationResponse = await client.conversationalAi.getConversation(
+      const conversationDetails = await client.conversationalAi.getConversation(
         latestConversation.id
       );
+
+      if (!conversationDetails?.transcript) {
+        throw new Error('No transcript found');
+      }
 
       // Update the transcript state
       setTranscripts(prev => ({
