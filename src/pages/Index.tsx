@@ -26,7 +26,7 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 pt-20 pb-32">
+      <main className="container mx-auto px-4 pt-20">
         {/* Hero Section */}
         <div className="text-center max-w-6xl mx-auto mb-24">
           <h1 className="text-[64px] leading-tight font-medium mb-20">
@@ -71,7 +71,7 @@ const Index = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8 mb-32">
           <div className="bg-white p-8 rounded-3xl shadow-sm">
             <div className="text-[#65B741] mb-6">
               <img 
@@ -115,6 +115,22 @@ const Index = () => {
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="container mx-auto px-4 py-8 border-t border-gray-200">
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            © 2024 PrintMoneyAI. All rights reserved.
+          </div>
+          <Button
+            variant="link"
+            className="text-[#65B741] hover:text-[#75C751]"
+            onClick={() => navigate('/example')}
+          >
+            View Example Agency Page
+          </Button>
+        </div>
+      </footer>
     </div>
   );
 };
