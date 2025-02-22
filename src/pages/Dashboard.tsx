@@ -64,15 +64,7 @@ export default function Dashboard() {
   const renderContent = () => {
     switch (activeView) {
       case 'boards':
-        return (
-          <div className="h-screen pt-6 pr-6">
-            <iframe 
-              src="https://scope-scribe-automator.lovable.app/"
-              className="w-full h-full rounded-lg border"
-              title="Project Boards"
-            />
-          </div>
-        );
+        return <KanbanBoard />;
       
       case 'settings':
         return (
