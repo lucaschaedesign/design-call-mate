@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -24,21 +23,6 @@ interface Booking {
   budget?: string;
   timeline?: string;
   message?: string;
-}
-
-// Define explicit types for the Supabase RPC response
-interface GetSecretParams {
-  name: string;
-}
-
-interface GetSecretResponse {
-  secret: string;
-}
-
-// Define explicit types for ElevenLabs transcript
-interface TranscriptSegment {
-  text: string;
-  [key: string]: unknown;
 }
 
 export default function Dashboard() {
@@ -71,32 +55,26 @@ export default function Dashboard() {
     setLoadingTranscripts(prev => ({ ...prev, [bookingId]: true }));
     
     try {
-      const { data: secretData, error } = await supabase.rpc<GetSecretResponse, GetSecretParams>(
-        'get_secret',
-        { name: 'ELEVENLABS_API_KEY' }
-      );
+      const { data, error } = await supabase
+        .rpc('get_secret', { name: 'ELEVENLABS_API_KEY' });
 
-      if (error || !secretData?.secret) {
+      if (error || !data?.secret) {
         console.error('Failed to retrieve API key:', error);
         throw new Error('Failed to retrieve API key');
       }
 
-      const client = new ElevenLabsClient({ apiKey: secretData.secret });
+      const client = new ElevenLabsClient({ apiKey: data.secret });
 
-      // Get conversations
       const conversations = await client.conversationalAi.getConversations({
         agent_id: "Niup5RvSzU7eQ7F9X4MW"
       });
 
-      // Check if there are any conversations
       if (!conversations?.conversations?.[0]) {
         throw new Error('No conversations found');
       }
 
-      // Get the latest conversation
       const latestConversation = conversations.conversations[0];
       
-      // Get conversation details
       const conversationDetails = await client.conversationalAi.getConversation(
         latestConversation.conversation_id
       );
@@ -105,13 +83,17 @@ export default function Dashboard() {
         throw new Error('No transcript found');
       }
 
-      // Process the transcript based on its type
       let transcriptText = '';
       
       if (Array.isArray(conversationDetails.transcript)) {
-        transcriptText = (conversationDetails.transcript as TranscriptSegment[])
-          .filter(t => typeof t === 'object' && t !== null && 'text' in t)
-          .map(t => t.text)
+        transcriptText = conversationDetails.transcript
+          .map(segment => {
+            if (typeof segment === 'object' && segment !== null && 'text' in segment) {
+              return (segment as { text: string }).text;
+            }
+            return '';
+          })
+          .filter(text => text !== '')
           .join('\n');
       } else if (typeof conversationDetails.transcript === 'string') {
         transcriptText = conversationDetails.transcript;
