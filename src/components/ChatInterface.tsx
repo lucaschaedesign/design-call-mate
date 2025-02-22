@@ -9,6 +9,7 @@ import { Badge } from "./ui/badge";
 import { Send } from "lucide-react";
 import { Message, BookingData, PREDEFINED_OPTIONS } from "@/lib/chat";
 import { useToast } from "./ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export function ChatInterface({
   onComplete
@@ -55,23 +56,17 @@ export function ChatInterface({
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/generate-response', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('generate-response', {
+        body: {
           messages: [...messages, userMessage],
           bookingData
-        }),
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate response');
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
-      
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: data.message,
