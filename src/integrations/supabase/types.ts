@@ -22,6 +22,7 @@ export type Database = {
           id: string
           industry: string | null
           meeting_date: string
+          meeting_link: string | null
           meeting_time: string
           message: string | null
           project_size: string | null
@@ -29,7 +30,6 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"] | null
           timeline: string | null
           updated_at: string | null
-          meeting_link: string | null
         }
         Insert: {
           budget?: string | null
@@ -43,6 +43,7 @@ export type Database = {
           id?: string
           industry?: string | null
           meeting_date: string
+          meeting_link?: string | null
           meeting_time: string
           message?: string | null
           project_size?: string | null
@@ -50,7 +51,6 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"] | null
           timeline?: string | null
           updated_at?: string | null
-          meeting_link?: string | null
         }
         Update: {
           budget?: string | null
@@ -64,6 +64,7 @@ export type Database = {
           id?: string
           industry?: string | null
           meeting_date?: string
+          meeting_link?: string | null
           meeting_time?: string
           message?: string | null
           project_size?: string | null
@@ -71,7 +72,6 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"] | null
           timeline?: string | null
           updated_at?: string | null
-          meeting_link?: string | null
         }
         Relationships: [
           {
