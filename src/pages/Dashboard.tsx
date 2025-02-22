@@ -1,8 +1,10 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DashboardSidebar } from "@/components/DashboardSidebar";
+import { format } from "date-fns";
 
 interface Booking {
   id: string;
@@ -11,11 +13,19 @@ interface Booking {
   meeting_date: string;
   meeting_time: string;
   status: string;
+  business_name?: string;
+  project_type?: string;
+  project_size?: string;
+  industry?: string;
+  budget?: string;
+  timeline?: string;
+  message?: string;
 }
 
 export default function Dashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchBookings() {
@@ -35,56 +45,116 @@ export default function Dashboard() {
     fetchBookings();
   }, []);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-booking-50 to-booking-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-booking-900">All Bookings</h1>
-        </div>
+  const getCallStatus = (booking: Booking) => {
+    const now = new Date();
+    const meetingDate = new Date(`${booking.meeting_date}T${booking.meeting_time}`);
+    const meetingEnd = new Date(meetingDate.getTime() + 30 * 60000); // 30 minutes duration
 
-        {loading ? (
-          <div>Loading bookings...</div>
-        ) : bookings.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-center text-muted-foreground">No bookings found</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {bookings.map((booking) => (
-              <Card key={booking.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CalendarIcon className="h-5 w-5" />
-                    <span>{booking.client_name}</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      {booking.client_email}
-                    </p>
-                    <p className="text-sm">
-                      {new Date(booking.meeting_date).toLocaleDateString()}{" "}
-                      at {booking.meeting_time}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-block h-2 w-2 rounded-full ${
-                          booking.status === "confirmed"
-                            ? "bg-green-500"
-                            : "bg-yellow-500"
-                        }`}
-                      />
-                      <span className="text-sm capitalize">{booking.status}</span>
+    if (now < meetingDate) {
+      return { label: "Not Started", color: "text-gray-500" };
+    } else if (now >= meetingDate && now <= meetingEnd) {
+      return { label: "Now in Call", color: "text-red-500" };
+    } else {
+      return { label: "Done", color: "text-green-500" };
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      <DashboardSidebar />
+      <div className="flex-1 p-8">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Calls</h2>
+          
+          {loading ? (
+            <div>Loading bookings...</div>
+          ) : bookings.length === 0 ? (
+            <Card className="p-6">
+              <p className="text-center text-gray-500">No bookings found</p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {bookings.map((booking) => {
+                const status = getCallStatus(booking);
+                const isExpanded = expandedBooking === booking.id;
+
+                return (
+                  <Card key={booking.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div>
+                          <h3 className="font-medium">{booking.client_name}</h3>
+                          <p className="text-sm text-gray-500">{booking.client_email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-8">
+                        <div className="text-sm">
+                          <div className="font-medium">
+                            {format(new Date(booking.meeting_date), "MMM dd")}
+                          </div>
+                          <div className="text-gray-500">
+                            {booking.meeting_time} (30 min)
+                          </div>
+                        </div>
+                        <div className={`text-sm font-medium ${status.color}`}>
+                          {status.label}
+                        </div>
+                        <button
+                          onClick={() => setExpandedBooking(isExpanded ? null : booking.id)}
+                          className="text-sm text-gray-500 hover:text-gray-700"
+                        >
+                          {isExpanded ? "collapse" : "view detail"}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+
+                    {isExpanded && (
+                      <div className="mt-4 pt-4 border-t">
+                        <Tabs defaultValue="details">
+                          <TabsList>
+                            <TabsTrigger value="details">Booking Details</TabsTrigger>
+                            <TabsTrigger value="transcript">Call Transcript</TabsTrigger>
+                          </TabsList>
+                          <TabsContent value="details" className="mt-4">
+                            <div className="space-y-4">
+                              {booking.business_name && (
+                                <div>
+                                  <h4 className="text-sm font-medium">Business Name</h4>
+                                  <p className="text-sm text-gray-600">{booking.business_name}</p>
+                                </div>
+                              )}
+                              {booking.industry && (
+                                <div>
+                                  <h4 className="text-sm font-medium">Industry</h4>
+                                  <p className="text-sm text-gray-600">{booking.industry}</p>
+                                </div>
+                              )}
+                              {booking.project_type && (
+                                <div>
+                                  <h4 className="text-sm font-medium">Project Type</h4>
+                                  <p className="text-sm text-gray-600">{booking.project_type}</p>
+                                </div>
+                              )}
+                              {booking.message && (
+                                <div>
+                                  <h4 className="text-sm font-medium">Additional Information</h4>
+                                  <p className="text-sm text-gray-600">{booking.message}</p>
+                                </div>
+                              )}
+                            </div>
+                          </TabsContent>
+                          <TabsContent value="transcript" className="mt-4">
+                            <p className="text-sm text-gray-500">Call transcript and summary will be added after the call.</p>
+                          </TabsContent>
+                        </Tabs>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
