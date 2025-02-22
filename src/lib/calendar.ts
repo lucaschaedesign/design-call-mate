@@ -34,13 +34,26 @@ export async function createCalendarEvent(event: CalendarEvent) {
           dateTime: event.endTime,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
-        attendees: event.attendees.map(email => ({ email })),
+        attendees: event.attendees.map(email => ({ 
+          email,
+          responseStatus: 'needsAction'
+        })),
         sendUpdates: 'all',
         reminders: {
-          useDefault: true
+          useDefault: true,
+          overrides: [
+            { method: 'email', minutes: 24 * 60 }, // 24 hours before
+            { method: 'popup', minutes: 30 } // 30 minutes before
+          ]
         },
         guestsCanModify: false,
         guestsCanInviteOthers: false,
+        conferenceData: {
+          createRequest: {
+            requestId: Date.now().toString(),
+            conferenceSolutionKey: { type: "hangoutsMeet" }
+          }
+        }
       }),
     });
 
