@@ -9,10 +9,6 @@ const Index = () => {
     navigate("/dashboard");
   };
 
-  const handleGoToBooking = () => {
-    navigate("/chat-to-book");
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-r from-[#FFFBEB] to-[#E8FFF8]">
       {/* Header */}
@@ -54,18 +50,12 @@ const Index = () => {
           <p className="text-2xl text-gray-700 mb-8">
             Designs that don't just look good—they generate value.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex justify-center">
             <Button 
               onClick={handleGoToDashboard}
               className="bg-[#333333] text-white hover:bg-[#444444] text-lg px-8 py-6 rounded-full"
             >
               Go to Your Dashboard
-            </Button>
-            <Button 
-              onClick={handleGoToBooking}
-              className="bg-[#65B741] text-white hover:bg-[#75C751] text-lg px-8 py-6 rounded-full"
-            >
-              Book a Discovery Call
             </Button>
           </div>
         </div>
