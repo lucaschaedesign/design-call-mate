@@ -67,8 +67,11 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
   };
 
   const storeScheduledCall = async (calendarEventId: string) => {
-    // First, get the host ID from the hosts table using maybeSingle() instead of single()
-    const { data: hostData, error: hostError } = await supabase
+    // First, get or create the host record
+    let finalHostId: string;
+
+    // Try to get existing host
+    const { data: existingHost, error: hostError } = await supabase
       .from('hosts')
       .select('id')
       .eq('email', 'hi@lucaschae.com')
@@ -79,27 +82,31 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
       throw new Error('Failed to fetch host information');
     }
 
-    if (!hostData) {
-      // Insert the host if it doesn't exist
-      const { data: newHost, error: insertError } = await supabase
+    if (!existingHost) {
+      // Create new host with a UUID
+      const hostId = crypto.randomUUID();
+      const { error: insertError } = await supabase
         .from('hosts')
-        .insert({ email: 'hi@lucaschae.com' })
-        .select('id')
-        .single();
+        .insert({
+          id: hostId,
+          email: 'hi@lucaschae.com'
+        });
 
       if (insertError) {
         console.error('Error creating host:', insertError);
         throw new Error('Failed to create host record');
       }
 
-      hostData = newHost;
+      finalHostId = hostId;
+    } else {
+      finalHostId = existingHost.id;
     }
 
     const { error } = await supabase
       .from('bookings')
       .insert({
         google_event_id: calendarEventId,
-        host_id: hostData.id,
+        host_id: finalHostId,
         client_email: formData.email,
         client_name: formData.name,
         meeting_date: selectedDate,
