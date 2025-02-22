@@ -195,7 +195,7 @@ export default function Dashboard() {
         return (
           <div className="p-8">
             <div className="max-w-5xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Calls</h2>
+              <h1 className="text-4xl font-bold text-gray-900 mb-8">Upcoming Calls</h1>
               
               {loading ? (
                 <div>Loading bookings...</div>
@@ -208,115 +208,141 @@ export default function Dashboard() {
                   {bookings.map((booking) => {
                     const status = getCallStatus(booking);
                     const isExpanded = expandedBooking === booking.id;
-                    const isLoadingTranscript = loadingTranscripts[booking.id];
-                    const transcript = transcripts[booking.id];
 
                     return (
-                      <Card key={booking.id} className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div>
-                              <h3 className="font-medium">{booking.client_name}</h3>
-                              <p className="text-sm text-gray-500">{booking.client_email}</p>
+                      <div 
+                        key={booking.id} 
+                        className="bg-white rounded-xl shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md"
+                      >
+                        <div className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                              <div>
+                                <h3 className="text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                                  {booking.client_name}
+                                </h3>
+                                <p className="text-gray-500 mt-1">{booking.client_email}</p>
+                              </div>
+                              <div className="text-gray-500 font-mono">
+                                {booking.business_name}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-8">
+                              <div>
+                                <div className="text-base font-medium text-gray-900">
+                                  {format(new Date(booking.meeting_date), "MMM dd")}
+                                </div>
+                                <div className="text-gray-500 flex items-center gap-2">
+                                  {booking.meeting_time}
+                                  <span className="text-gray-400">(15 min)</span>
+                                </div>
+                              </div>
+                              <div>
+                                <span 
+                                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                                    status.label === "Done" 
+                                      ? "bg-green-50 text-green-700" 
+                                      : status.label === "Now in Call"
+                                      ? "bg-red-50 text-red-700"
+                                      : "bg-gray-50 text-gray-600"
+                                  }`}
+                                >
+                                  <span className={`w-1.5 h-1.5 rounded-full mr-2 ${
+                                    status.label === "Done" 
+                                      ? "bg-green-600" 
+                                      : status.label === "Now in Call"
+                                      ? "bg-red-600"
+                                      : "bg-gray-500"
+                                  }`}></span>
+                                  {status.label}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => setExpandedBooking(isExpanded ? null : booking.id)}
+                                className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                              >
+                                {isExpanded ? "collapse" : "view detail"}
+                              </button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-8">
-                            <div className="text-sm">
-                              <div className="font-medium">
-                                {format(new Date(booking.meeting_date), "MMM dd")}
-                              </div>
-                              <div className="text-gray-500">
-                                {booking.meeting_time} (30 min)
-                              </div>
-                            </div>
-                            <div className={`text-sm font-medium ${status.color}`}>
-                              {status.label}
-                            </div>
-                            <button
-                              onClick={() => setExpandedBooking(isExpanded ? null : booking.id)}
-                              className="text-sm text-gray-500 hover:text-gray-700"
-                            >
-                              {isExpanded ? "collapse" : "view detail"}
-                            </button>
-                          </div>
-                        </div>
 
-                        {isExpanded && (
-                          <div className="mt-4 pt-4 border-t">
-                            <Tabs defaultValue="details">
-                              <TabsList>
-                                <TabsTrigger value="details">Booking Details</TabsTrigger>
-                                <TabsTrigger value="transcript">Call Transcript</TabsTrigger>
-                              </TabsList>
-                              <TabsContent value="details" className="mt-4">
-                                <div className="space-y-4">
-                                  {booking.business_name && (
-                                    <div>
-                                      <h4 className="text-sm font-medium">Business Name</h4>
-                                      <p className="text-sm text-gray-600">{booking.business_name}</p>
-                                    </div>
-                                  )}
-                                  {booking.industry && (
-                                    <div>
-                                      <h4 className="text-sm font-medium">Industry</h4>
-                                      <p className="text-sm text-gray-600">{booking.industry}</p>
-                                    </div>
-                                  )}
-                                  {booking.project_type && (
-                                    <div>
-                                      <h4 className="text-sm font-medium">Project Type</h4>
-                                      <p className="text-sm text-gray-600">{booking.project_type}</p>
-                                    </div>
-                                  )}
-                                  {booking.message && (
-                                    <div>
-                                      <h4 className="text-sm font-medium">Additional Information</h4>
-                                      <p className="text-sm text-gray-600">{booking.message}</p>
-                                    </div>
-                                  )}
+                          {isExpanded && (
+                            <div className="mt-6 pt-6 border-t border-gray-100">
+                              <Tabs defaultValue="details" className="w-full">
+                                <TabsList className="mb-4">
+                                  <TabsTrigger value="details">Booking Details</TabsTrigger>
+                                  <TabsTrigger value="transcript">Call Transcript</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="details">
+                                  <div className="grid grid-cols-2 gap-6">
+                                    {booking.business_name && (
+                                      <div>
+                                        <h4 className="text-sm font-medium text-gray-600 mb-1">Business Name</h4>
+                                        <p className="text-gray-900">{booking.business_name}</p>
+                                      </div>
+                                    )}
+                                    {booking.industry && (
+                                      <div>
+                                        <h4 className="text-sm font-medium text-gray-600 mb-1">Industry</h4>
+                                        <p className="text-gray-900">{booking.industry}</p>
+                                      </div>
+                                    )}
+                                    {booking.project_type && (
+                                      <div>
+                                        <h4 className="text-sm font-medium text-gray-600 mb-1">Project Type</h4>
+                                        <p className="text-gray-900">{booking.project_type}</p>
+                                      </div>
+                                    )}
+                                    {booking.message && (
+                                      <div className="col-span-2">
+                                        <h4 className="text-sm font-medium text-gray-600 mb-1">Additional Information</h4>
+                                        <p className="text-gray-900">{booking.message}</p>
+                                      </div>
+                                    )}
+                                  </div>
                                   {booking.meeting_link && (
-                                    <div className="flex items-center gap-2">
+                                    <div className="mt-6">
                                       <a
-                                        className="text-blue-600 hover:text-blue-800 flex items-center gap-2" 
                                         href={booking.meeting_link}
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
                                       >
                                         <VideoIcon className="w-4 h-4" />
                                         Join Meeting
                                       </a>
                                     </div>
                                   )}
-                                </div>
-                              </TabsContent>
-                              <TabsContent value="transcript" className="mt-4">
-                                {transcript ? (
-                                  <div className="text-sm text-gray-600 whitespace-pre-wrap">
-                                    {transcript}
-                                  </div>
-                                ) : (
-                                  <div>
-                                    <p className="text-sm text-gray-500 mb-4">
-                                      {isLoadingTranscript 
-                                        ? "Loading transcript..."
-                                        : "Call transcript and summary will be added after the call."}
-                                    </p>
-                                    {!isLoadingTranscript && !transcript && (
-                                      <Button
-                                        onClick={() => fetchTranscript(booking.id)}
-                                        variant="outline"
-                                        size="sm"
-                                      >
-                                        Get transcript
-                                      </Button>
-                                    )}
-                                  </div>
-                                )}
-                              </TabsContent>
-                            </Tabs>
-                          </div>
-                        )}
-                      </Card>
+                                </TabsContent>
+                                <TabsContent value="transcript">
+                                  {transcripts[booking.id] ? (
+                                    <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                                      {transcripts[booking.id]}
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <p className="text-sm text-gray-500 mb-4">
+                                        {loadingTranscripts[booking.id] 
+                                          ? "Loading transcript..."
+                                          : "Call transcript and summary will be added after the call."}
+                                      </p>
+                                      {!loadingTranscripts[booking.id] && (
+                                        <Button
+                                          onClick={() => fetchTranscript(booking.id)}
+                                          variant="outline"
+                                          size="sm"
+                                        >
+                                          Get transcript
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )}
+                                </TabsContent>
+                              </Tabs>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
