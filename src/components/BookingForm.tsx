@@ -52,7 +52,7 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration }: Bo
         description: formData.message || 'Initial discovery call to discuss project needs.',
         startTime,
         endTime,
-        attendees: [formData.email, 'your.email@yourdomain.com'], // Replace this with your actual email
+        attendees: [formData.email, 'hi@lucaschae.com'],
       });
 
       console.log('Calendar event created:', response); // Debug log
