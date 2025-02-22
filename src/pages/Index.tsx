@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Index() {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
-  const [selectedDuration] = useState(30);
+  const [selectedDuration, setSelectedDuration] = useState(30);
   const [bookingData, setBookingData] = useState<BookingData>();
   const [showForm, setShowForm] = useState(false);
   const [isHost, setIsHost] = useState(false);
@@ -68,8 +68,9 @@ export default function Index() {
             selectedDate={selectedDate}
             onDateSelect={setSelectedDate}
             selectedTime={selectedTime}
-            onTimeSelect={setSelectedTime}
+            onTimeSelect={setTimeSelect}
             selectedDuration={selectedDuration}
+            onDurationSelect={setSelectedDuration}
           />
           <BookingForm
             selectedDate={selectedDate?.toISOString()}
