@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { isAuthenticated, initiateGoogleAuth } from "@/lib/googleAuth";
 import { VideoIcon } from "@/components/icons/VideoIcon";
 import { Task as KanbanTask } from '@/hooks/useKanban';
+import { ElevenLabsClient } from "elevenlabs";
 
 interface Booking {
   id: string;
