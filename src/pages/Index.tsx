@@ -1,58 +1,28 @@
-import { useState, useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
-import { ChatInterface } from "@/components/ChatInterface";
-import { BookingData } from "@/lib/chat";
-import { BookingForm } from "@/components/BookingForm";
 import { useNavigate } from "react-router-dom";
-import { isAuthenticated, initiateGoogleAuth } from "@/lib/googleAuth";
-import { toast } from "sonner";
 
 const Index = () => {
-  const [showBookingForm, setShowBookingForm] = useState(false);
-  const [bookingData, setBookingData] = useState<BookingData>();
-  const [calendarConnected, setCalendarConnected] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    checkCalendarAuth();
-  }, []);
-
-  const checkCalendarAuth = () => {
-    const isCalendarAuth = isAuthenticated();
-    setCalendarConnected(isCalendarAuth);
-  };
 
   const handleGoToDashboard = () => {
     navigate("/dashboard");
   };
 
-  const handleCalendarReconnect = () => {
-    try {
-      initiateGoogleAuth();
-    } catch (error) {
-      console.error('Failed to reconnect calendar:', error);
-      toast.error('Failed to reconnect to Google Calendar');
-    }
-  };
-
-  const handleChatComplete = (data: BookingData) => {
-    setBookingData(data);
-    setShowBookingForm(true);
+  const handleGoToBooking = () => {
+    navigate("/chat-to-book");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-[#FFFBEB] to-[#E8FFF8]">
       {/* Header */}
-      <header className="container mx-auto px-4 py-6 flex justify-between items-center">
+      <header className="container mx-auto px-4 py-6">
         <div className="flex items-center gap-2">
           <span className="text-2xl font-semibold">$</span>
           <span className="font-semibold">Print</span>
           <span className="font-semibold text-[#65B741]">Money</span>
           <span className="font-semibold">AI</span>
         </div>
-        <Button variant="outline" className="bg-[#333333] text-white hover:bg-[#444444]">
-          Sign in / Sign up
-        </Button>
       </header>
 
       {/* Main Content */}
@@ -84,12 +54,20 @@ const Index = () => {
           <p className="text-2xl text-gray-700 mb-8">
             Designs that don't just look good—they generate value.
           </p>
-          <Button 
-            onClick={handleGoToDashboard}
-            className="bg-[#333333] text-white hover:bg-[#444444] text-lg px-8 py-6 rounded-full"
-          >
-            Go to Your Dashboard
-          </Button>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              onClick={handleGoToDashboard}
+              className="bg-[#333333] text-white hover:bg-[#444444] text-lg px-8 py-6 rounded-full"
+            >
+              Go to Your Dashboard
+            </Button>
+            <Button 
+              onClick={handleGoToBooking}
+              className="bg-[#65B741] text-white hover:bg-[#75C751] text-lg px-8 py-6 rounded-full"
+            >
+              Book a Discovery Call
+            </Button>
+          </div>
         </div>
 
         {/* Features Grid */}
@@ -135,20 +113,6 @@ const Index = () => {
               Book discovery calls at the perfect time, with automated follow-ups and reminders.
             </p>
           </div>
-        </div>
-
-        {/* Chat Interface or Booking Form */}
-        <div className="mt-20">
-          {showBookingForm ? (
-            <BookingForm 
-              selectedDate={bookingData?.meetingDate}
-              selectedTime={bookingData?.meetingTime}
-              selectedDuration={30}
-              bookingData={bookingData}
-            />
-          ) : (
-            <ChatInterface onComplete={handleChatComplete} />
-          )}
         </div>
       </main>
     </div>
