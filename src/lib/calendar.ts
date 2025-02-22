@@ -9,7 +9,13 @@ export interface CalendarEvent {
 
 export async function createCalendarEvent(event: CalendarEvent) {
   try {
-    console.log('Starting calendar event creation with:', {
+    const accessToken = localStorage.getItem('google_access_token');
+    if (!accessToken) {
+      throw new Error('No access token found. Please authenticate with Google Calendar.');
+    }
+
+    console.log('Creating calendar event with token:', accessToken.substring(0, 10) + '...');
+    console.log('Event details:', {
       summary: event.summary,
       description: event.description,
       startTime: event.startTime,
@@ -17,7 +23,6 @@ export async function createCalendarEvent(event: CalendarEvent) {
       attendees: event.attendees
     });
 
-    // Create the request body and log it
     const requestBody = {
       summary: event.summary,
       description: event.description,
@@ -34,12 +39,6 @@ export async function createCalendarEvent(event: CalendarEvent) {
         responseStatus: 'needsAction',
         optional: false
       })),
-      organizer: {
-        email: 'hi@lucaschae.com',
-        self: true
-      },
-      sendNotifications: true,  // Added this explicit flag
-      sendUpdates: 'all',
       guestsCanModify: false,
       guestsCanInviteOthers: false,
       reminders: {
@@ -56,36 +55,37 @@ export async function createCalendarEvent(event: CalendarEvent) {
       }
     };
 
-    console.log('Request body:', requestBody);
-    console.log('Access token present:', !!localStorage.getItem('google_access_token'));
+    console.log('Sending request with body:', requestBody);
 
-    const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all&conferenceDataVersion=1', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('google_access_token')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await fetch(
+      'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1', 
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
 
     console.log('Response status:', response.status);
     const data = await response.json();
-    console.log('Full API response:', data);
-    
-    if (!response.ok) {
-      console.error('Calendar API Error:', data);
-      throw new Error(data.error?.message || 'Failed to create calendar event');
-    }
+    console.log('Response data:', data);
 
-    if (data.status === 'confirmed') {
-      console.log('Event created successfully with ID:', data.id);
-      console.log('Attendees:', data.attendees);
-      console.log('Conference data:', data.conferenceData);
+    if (!response.ok) {
+      // If we get a 401 (Unauthorized), clear the token and throw an error
+      if (response.status === 401) {
+        localStorage.removeItem('google_access_token');
+        localStorage.removeItem('token_expiration');
+        throw new Error('Calendar authentication expired. Please reconnect your calendar.');
+      }
+      throw new Error(data.error?.message || 'Failed to create calendar event');
     }
 
     return data;
   } catch (error) {
-    console.error('Error creating calendar event:', error);
+    console.error('Calendar event creation error:', error);
     throw error;
   }
 }
