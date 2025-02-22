@@ -6,8 +6,8 @@ import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar } from "./ui/avatar";
 import { Badge } from "./ui/badge";
-import { Send } from "lucide-react";
-import { Message, BookingData, PREDEFINED_OPTIONS } from "@/lib/chat";
+import { Send, Paperclip, Smile } from "lucide-react";
+import { Message, BookingData } from "@/lib/chat";
 import { useToast } from "./ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar } from "./ui/calendar";
@@ -39,7 +39,7 @@ export function ChatInterface({
   const [bookingData, setBookingData] = useState<BookingData>({});
   
   useEffect(() => {
-    // Start the conversation
+    // Start the conversation with a friendly message
     handleInitialMessage();
   }, []);
 
@@ -53,7 +53,8 @@ export function ChatInterface({
   const handleInitialMessage = async () => {
     const initialMessage: Message = {
       role: 'assistant',
-      content: "Hi! I'm here to help you schedule a discovery call. First, could you tell me your business name?",
+      content: "Hey! Looking for UX/UI design? Let's build something profitable together!",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     setMessages([initialMessage]);
   };
@@ -180,8 +181,8 @@ export function ChatInterface({
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto h-[600px] flex flex-col">
-      <ScrollArea className="flex-1 p-4 space-y-4" ref={scrollAreaRef}>
+    <Card className="w-full max-w-2xl mx-auto h-[600px] flex flex-col bg-white shadow-lg rounded-2xl">
+      <ScrollArea className="flex-1 p-6 space-y-6" ref={scrollAreaRef}>
         {messages.map((message, index) => (
           <div
             key={index}
@@ -189,33 +190,40 @@ export function ChatInterface({
               message.role === 'assistant' ? '' : 'flex-row-reverse'
             }`}
           >
-            {message.role === 'assistant' && (
-              <Avatar className="w-8 h-8">
-                <div className="bg-primary text-primary-foreground w-full h-full flex items-center justify-center text-sm font-semibold">
-                  AI
-                </div>
-              </Avatar>
-            )}
+            <Avatar className={`w-10 h-10 rounded-full border-2 border-white ${
+              message.role === 'assistant' ? 'bg-blue-100' : 'bg-orange-100'
+            }`}>
+              <div className={`w-full h-full flex items-center justify-center text-sm font-semibold ${
+                message.role === 'assistant' ? 'text-blue-600' : 'text-orange-600'
+              }`}>
+                {message.role === 'assistant' ? '👩‍💼' : '👤'}
+              </div>
+            </Avatar>
             
-            <div
-              className={`rounded-lg p-3 max-w-[80%] ${
+            <div className="flex flex-col gap-1 max-w-[80%]">
+              <div className={`rounded-2xl p-4 ${
                 message.role === 'assistant'
-                  ? 'bg-muted'
-                  : 'bg-primary text-primary-foreground ml-auto'
-              }`}
-            >
-              {message.content}
+                  ? 'bg-white border border-gray-200'
+                  : 'bg-blue-50 ml-auto'
+              }`}>
+                <p className="text-gray-800">{message.content}</p>
+              </div>
+              {message.timestamp && (
+                <span className="text-xs text-gray-400 px-2">
+                  {message.timestamp}
+                </span>
+              )}
             </div>
           </div>
         ))}
         
         {messages[messages.length - 1]?.options && (
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-2 px-12">
             {messages[messages.length - 1].options?.map((option, index) => (
               <Badge
                 key={index}
-                variant="outline"
-                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                variant="secondary"
+                className="cursor-pointer hover:bg-blue-50 transition-colors py-2 px-4 rounded-full"
                 onClick={() => handleOptionSelect(option.value)}
               >
                 {option.label}
@@ -225,27 +233,43 @@ export function ChatInterface({
         )}
         
         {isLoading && (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <div className="animate-pulse">...</div>
+          <div className="flex items-center gap-2 text-gray-400 px-12">
+            <div className="animate-pulse flex gap-2">
+              <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+              <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+              <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+            </div>
           </div>
         )}
       </ScrollArea>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t border-gray-100">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSend();
           }}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-gray-50 rounded-full px-4 py-2"
         >
+          <button type="button" className="text-gray-400 hover:text-gray-600">
+            <Paperclip className="h-5 w-5" />
+          </button>
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
+            placeholder="Write a message..."
             disabled={isLoading}
+            className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2"
           />
-          <Button type="submit" size="icon" disabled={isLoading || !inputValue.trim()}>
+          <button type="button" className="text-gray-400 hover:text-gray-600">
+            <Smile className="h-5 w-5" />
+          </button>
+          <Button 
+            type="submit" 
+            size="icon"
+            disabled={isLoading || !inputValue.trim()}
+            className="rounded-full bg-blue-500 hover:bg-blue-600"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </form>

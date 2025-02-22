@@ -1,4 +1,3 @@
-
 export interface Message {
   role: 'assistant' | 'user';
   content: string;
@@ -6,6 +5,7 @@ export interface Message {
     label: string;
     value: string;
   }>;
+  timestamp?: string;
 }
 
 export interface BookingData {
