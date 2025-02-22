@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -10,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { ElevenLabsClient } from "elevenlabs";
 import { toast } from "sonner";
 import { isAuthenticated, initiateGoogleAuth } from "@/lib/googleAuth";
+import { Link } from "react-router-dom";
+import { VideoIcon } from "@/components/icons/VideoIcon";
 
 interface Booking {
   id: string;
@@ -25,6 +26,7 @@ interface Booking {
   budget?: string;
   timeline?: string;
   message?: string;
+  meeting_link?: string | null;
 }
 
 interface SecretResponse {
@@ -266,6 +268,19 @@ export default function Dashboard() {
                                     <div>
                                       <h4 className="text-sm font-medium">Additional Information</h4>
                                       <p className="text-sm text-gray-600">{booking.message}</p>
+                                    </div>
+                                  )}
+                                  {booking.meeting_link && (
+                                    <div className="flex items-center gap-2">
+                                      <a
+                                        className="text-blue-600 hover:text-blue-800 flex items-center gap-2" 
+                                        href={booking.meeting_link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <VideoIcon className="w-4 h-4" />
+                                        Join Meeting
+                                      </a>
                                     </div>
                                   )}
                                 </div>

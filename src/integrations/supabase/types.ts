@@ -29,6 +29,7 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"] | null
           timeline: string | null
           updated_at: string | null
+          meeting_link: string | null
         }
         Insert: {
           budget?: string | null
@@ -49,6 +50,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"] | null
           timeline?: string | null
           updated_at?: string | null
+          meeting_link?: string | null
         }
         Update: {
           budget?: string | null
@@ -69,6 +71,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"] | null
           timeline?: string | null
           updated_at?: string | null
+          meeting_link?: string | null
         }
         Relationships: [
           {

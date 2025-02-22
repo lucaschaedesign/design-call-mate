@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,7 @@ import { User, Mail, MessageSquare, Building2, Calendar } from "lucide-react";
 import { createCalendarEvent, calculateEndTime, formatStartTime } from "@/lib/calendar";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingData } from "@/lib/chat";
-import { clearAuth } from "@/lib/googleAuth";
+import { clearAuth, isAuthenticated, initiateGoogleAuth, handleAuthCallback } from "@/lib/googleAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BookingFormProps {
@@ -34,6 +33,19 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
     message: ''
   });
   const [editedBookingData, setEditedBookingData] = useState<BookingData>(bookingData || {});
+  const [isCalendarAuthenticated, setIsCalendarAuthenticated] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash) {
+      const authSuccess = handleAuthCallback();
+      if (authSuccess) {
+        setIsCalendarAuthenticated(true);
+        window.history.pushState('', document.title, window.location.pathname);
+      }
+    } else {
+      setIsCalendarAuthenticated(isAuthenticated());
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -57,6 +69,9 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
       `Timeline: ${bookingData.timeline || 'N/A'}`,
       `Budget Range: ${bookingData.budget || 'N/A'}`,
       "",
+      "🔗 Meeting Link",
+      "https://elevenlabs.io/app/talk-to?agent_id=Niup5RvSzU7eQ7F9X4MW",
+      "",
       "💬 Additional Notes",
       formData.message || 'No additional notes provided.',
       "",
@@ -67,7 +82,6 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
   };
 
   const storeScheduledCall = async (calendarEventId: string) => {
-    // First, get the host ID from the hosts table
     const { data: existingHost, error: hostError } = await supabase
       .from('hosts')
       .select('id')
@@ -82,7 +96,6 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
     let hostId: string;
 
     if (!existingHost) {
-      // If host doesn't exist, create one
       const { data: newHost, error: insertError } = await supabase
         .from('hosts')
         .insert({ 
@@ -102,7 +115,6 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
       hostId = existingHost.id;
     }
 
-    // Create the booking record
     const { error: bookingError } = await supabase
       .from('bookings')
       .insert({
@@ -121,7 +133,8 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
         project_size: editedBookingData.projectSize,
         timeline: editedBookingData.timeline,
         budget: editedBookingData.budget,
-        message: formData.message
+        message: formData.message,
+        meeting_link: "https://elevenlabs.io/app/talk-to?agent_id=Niup5RvSzU7eQ7F9X4MW"
       });
 
     if (bookingError) {
@@ -133,6 +146,16 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!isCalendarAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please authenticate with Google Calendar to schedule your call.",
+        variant: "destructive"
+      });
+      initiateGoogleAuth();
+      return;
+    }
+
     if (!selectedDate || !selectedTime) {
       toast({
         title: "Missing Information",
@@ -161,7 +184,6 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
 
       console.log('Calendar event created:', calendarResponse);
 
-      // Store the scheduled call in Supabase
       await storeScheduledCall(calendarResponse.id);
 
       toast({
@@ -175,6 +197,7 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
       
       if (error.message?.includes('authentication') || error.status === 401) {
         clearAuth();
+        setIsCalendarAuthenticated(false);
         toast({
           title: "Authentication Error",
           description: "Please try again. If the problem persists, contact support.",
@@ -329,7 +352,9 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
           size="lg"
           disabled={!isFormValid || isSubmitting}
         >
-          {isSubmitting ? "Scheduling..." : "Schedule Discovery Call"}
+          {isSubmitting ? "Scheduling..." : 
+           !isCalendarAuthenticated ? "Authenticate Calendar" : 
+           "Schedule Discovery Call"}
         </Button>
       </form>
     </Card>
