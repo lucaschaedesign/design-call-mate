@@ -67,10 +67,7 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
   };
 
   const storeScheduledCall = async (calendarEventId: string) => {
-    // First, get or create the host record
-    let finalHostId: string;
-
-    // Try to get existing host
+    // First, get the host ID from the hosts table
     const { data: existingHost, error: hostError } = await supabase
       .from('hosts')
       .select('id')
@@ -82,31 +79,35 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
       throw new Error('Failed to fetch host information');
     }
 
-    if (!existingHost) {
-      // Create new host with a UUID
-      const hostId = crypto.randomUUID();
-      const { error: insertError } = await supabase
-        .from('hosts')
-        .insert({
-          id: hostId,
-          email: 'hi@lucaschae.com'
-        });
+    let hostId: string;
 
-      if (insertError) {
+    if (!existingHost) {
+      // If host doesn't exist, create one
+      const { data: newHost, error: insertError } = await supabase
+        .from('hosts')
+        .insert({ 
+          id: crypto.randomUUID(),
+          email: 'hi@lucaschae.com'
+        })
+        .select('id')
+        .single();
+
+      if (insertError || !newHost) {
         console.error('Error creating host:', insertError);
         throw new Error('Failed to create host record');
       }
 
-      finalHostId = hostId;
+      hostId = newHost.id;
     } else {
-      finalHostId = existingHost.id;
+      hostId = existingHost.id;
     }
 
-    const { error } = await supabase
+    // Create the booking record
+    const { error: bookingError } = await supabase
       .from('bookings')
       .insert({
         google_event_id: calendarEventId,
-        host_id: finalHostId,
+        host_id: hostId,
         client_email: formData.email,
         client_name: formData.name,
         meeting_date: selectedDate,
@@ -123,8 +124,8 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
         message: formData.message
       });
 
-    if (error) {
-      console.error('Error storing scheduled call:', error);
+    if (bookingError) {
+      console.error('Error storing scheduled call:', bookingError);
       throw new Error('Failed to store booking information');
     }
   };
