@@ -83,50 +83,55 @@ export default function Dashboard() {
     setLoadingTranscripts(prev => ({ ...prev, [bookingId]: true }));
     
     try {
-      const { data: secretData, error: secretError } = await supabase
-        .rpc('get_secret', { name: 'ELEVENLABS_API_KEY' }) as { data: SecretResponse, error: Error | null };
+      const API_KEY = 'sk_49c62954bcb37646b9658ffa06c4794a32416af7b34090c4';
+      const AGENT_ID = 'Niup5RvSzU7eQ7F9X4MW';
+      const CONVERSATION_ID = '3OOuCvfy8iIrJTc4Qu7L';
 
-      if (secretError || !secretData || !secretData.secret) {
-        console.error('Failed to retrieve API key:', secretError);
-        throw new Error('Failed to retrieve API key');
-      }
-
-      const client = new ElevenLabsClient({ apiKey: secretData.secret });
-
-      const conversations = await client.conversationalAi.getConversations({
-        agent_id: "Niup5RvSzU7eQ7F9X4MW"
-      });
-
-      if (!conversations?.conversations?.[0]) {
-        throw new Error('No conversations found');
-      }
-
-      const latestConversation = conversations.conversations[0];
-      
-      const conversationDetails = await client.conversationalAi.getConversation(
-        latestConversation.conversation_id
+      // First, fetch conversations
+      const conversationsResponse = await fetch(
+        `https://api.elevenlabs.io/v1/convai/conversations?agent_id=${AGENT_ID}`,
+        {
+          headers: {
+            'xi-api-key': API_KEY,
+          },
+        }
       );
 
-      if (!conversationDetails?.transcript) {
-        throw new Error('No transcript found');
+      if (!conversationsResponse.ok) {
+        throw new Error('Failed to fetch conversations');
       }
 
-      let transcriptText = '';
+      const conversationsData = await conversationsResponse.json();
       
-      if (Array.isArray(conversationDetails.transcript)) {
-        transcriptText = conversationDetails.transcript
-          .map(segment => {
-            if (typeof segment === 'object' && segment !== null && 'text' in segment) {
-              return (segment as { text: string }).text;
-            }
-            return '';
-          })
-          .filter(text => text !== '')
-          .join('\n');
-      } else if (typeof conversationDetails.transcript === 'string') {
-        transcriptText = conversationDetails.transcript;
-      } else {
-        transcriptText = String(conversationDetails.transcript);
+      // Then fetch the specific conversation details
+      const conversationResponse = await fetch(
+        `https://api.elevenlabs.io/v1/convai/conversations/${CONVERSATION_ID}`,
+        {
+          headers: {
+            'xi-api-key': API_KEY,
+          },
+        }
+      );
+
+      if (!conversationResponse.ok) {
+        throw new Error('Failed to fetch conversation details');
+      }
+
+      const conversationData = await conversationResponse.json();
+      console.log('Conversation Data:', conversationData);
+      
+      // Format the conversation into a readable transcript
+      let transcriptText = conversationData.transcript  // Access the transcript array
+        .filter((message: any) => message.message !== null) // Filter out null messages
+        .map((message: any) => {
+          const role = message.role === 'agent' ? 'Agent' : 'Client';
+          return `${role}: ${message.message}`;
+        })
+        .join('\n\n');
+
+      // Optional: Add the summary at the end if you want it
+      if (conversationData.analysis?.transcript_summary) {
+        transcriptText += '\n\n--- Summary ---\n' + conversationData.analysis.transcript_summary;
       }
 
       setTranscripts(prev => ({
