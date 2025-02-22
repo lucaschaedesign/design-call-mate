@@ -1,6 +1,6 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { addDays, format } from "https://deno.land/x/date_fns@v2.22.1/index.js";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -8,6 +8,23 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Generate next 5 business days (excluding weekends)
+function getNextBusinessDays(startDate: Date, count: number): Date[] {
+  const dates: Date[] = [];
+  let currentDate = startDate;
+  
+  while (dates.length < count) {
+    currentDate = addDays(currentDate, 1);
+    if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) { // Skip weekends
+      dates.push(currentDate);
+    }
+  }
+  
+  return dates;
+}
+
+const nextDates = getNextBusinessDays(new Date(), 5);
 
 // Define the options directly in the edge function
 const PREDEFINED_OPTIONS = {
@@ -43,6 +60,20 @@ const PREDEFINED_OPTIONS = {
     { label: '$5K-$10K', value: '5k_10k' },
     { label: '$10K-$20K', value: '10k_20k' },
     { label: 'Not sure, need a quote', value: 'need_quote' }
+  ],
+  dates: [
+    ...nextDates.map(date => ({
+      label: format(date, 'EEE, MMM d'),
+      value: format(date, 'yyyy-MM-dd')
+    })),
+    { label: 'Custom Date', value: 'custom' }
+  ],
+  times: [
+    { label: '9:00 AM', value: '09:00' },
+    { label: '11:00 AM', value: '11:00' },
+    { label: '2:00 PM', value: '14:00' },
+    { label: '4:00 PM', value: '16:00' },
+    { label: 'Custom Time', value: 'custom' }
   ]
 };
 
@@ -72,6 +103,18 @@ const CONVERSATION_STEPS = [
     field: 'budget',
     question: "Do you have a budget range in mind?",
     options: PREDEFINED_OPTIONS.budgets
+  },
+  {
+    field: 'meetingDate',
+    question: "Great! Let's schedule your discovery call. What date works best for you?",
+    options: PREDEFINED_OPTIONS.dates,
+    allowCustom: true
+  },
+  {
+    field: 'meetingTime',
+    question: "And what time would you prefer? (All times in EST)",
+    options: PREDEFINED_OPTIONS.times,
+    allowCustom: true
   }
 ];
 
@@ -96,9 +139,8 @@ serve(async (req) => {
       responseMessage = nextStep.question;
       options = nextStep.options;
     } else {
-      // All questions answered, proceed to scheduling
-      responseMessage = "Great! Now let's schedule your 30-minute discovery call. Please select from the available time slots:";
-      // Here you would generate available time slots
+      // All questions answered, proceed to confirmation
+      responseMessage = `Perfect! I've scheduled your discovery call for ${updatedBookingData.meetingDate} at ${updatedBookingData.meetingTime} EST. You'll receive a calendar invite shortly.`;
     }
 
     return new Response(

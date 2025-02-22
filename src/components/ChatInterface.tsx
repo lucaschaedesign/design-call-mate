@@ -10,6 +10,19 @@ import { Send } from "lucide-react";
 import { Message, BookingData, PREDEFINED_OPTIONS } from "@/lib/chat";
 import { useToast } from "./ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Calendar } from "./ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "./ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export function ChatInterface({
   onComplete
@@ -19,6 +32,8 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [bookingData, setBookingData] = useState<BookingData>({});
@@ -95,9 +110,73 @@ export function ChatInterface({
     }
   };
 
-  const handleOptionSelect = (option: string) => {
-    setInputValue(option);
-    handleSend();
+  const handleOptionSelect = async (option: string) => {
+    if (option === 'custom') {
+      const currentStep = messages[messages.length - 1]?.options?.[0]?.label;
+      if (currentStep?.includes('date')) {
+        setShowDatePicker(true);
+      } else if (currentStep?.includes('time')) {
+        setShowTimePicker(true);
+      }
+      return;
+    }
+    
+    // Directly send the selected option
+    const userMessage: Message = {
+      role: 'user',
+      content: option,
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-response', {
+        body: {
+          messages: [...messages, userMessage],
+          bookingData
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.message,
+        options: data.options
+      }]);
+
+      if (data.bookingData) {
+        setBookingData(prev => ({
+          ...prev,
+          ...data.bookingData
+        }));
+
+        if (data.completed) {
+          onComplete(data.bookingData);
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate response. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCustomDateSelect = (date: Date) => {
+    setShowDatePicker(false);
+    handleOptionSelect(date.toISOString().split('T')[0]);
+  };
+
+  const handleCustomTimeSelect = (time: string) => {
+    setShowTimePicker(false);
+    handleOptionSelect(time);
   };
 
   return (
@@ -171,6 +250,46 @@ export function ChatInterface({
           </Button>
         </form>
       </div>
+
+      {/* Date Picker Popover */}
+      <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={new Date()}
+            onSelect={(date) => date && handleCustomDateSelect(date)}
+            disabled={(date) =>
+              date < new Date() || // Can't select past dates
+              date.getDay() === 0 || // Sunday
+              date.getDay() === 6    // Saturday
+            }
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+
+      {/* Time Picker Popover */}
+      <Popover open={showTimePicker} onOpenChange={setShowTimePicker}>
+        <PopoverContent className="w-48">
+          <Select onValueChange={handleCustomTimeSelect}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select time" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 16 }, (_, i) => {
+                const hour = Math.floor(i / 2) + 9; // Start at 9 AM
+                const minute = i % 2 === 0 ? "00" : "30";
+                const time = `${hour.toString().padStart(2, '0')}:${minute}`;
+                return (
+                  <SelectItem key={time} value={time}>
+                    {hour > 12 ? `${hour - 12}:${minute} PM` : `${hour}:${minute} AM`}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </PopoverContent>
+      </Popover>
     </Card>
   );
 }
