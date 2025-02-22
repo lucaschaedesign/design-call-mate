@@ -101,6 +101,74 @@ export type Database = {
         }
         Relationships: []
       }
+      kanban_statuses: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          position: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          position: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          position?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assignee: string | null
+          created_at: string | null
+          date_completed: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          status_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assignee?: string | null
+          created_at?: string | null
+          date_completed?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assignee?: string | null
+          created_at?: string | null
+          date_completed?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
