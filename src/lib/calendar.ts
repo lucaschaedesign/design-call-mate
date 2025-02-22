@@ -9,6 +9,14 @@ export interface CalendarEvent {
 
 export async function createCalendarEvent(event: CalendarEvent) {
   try {
+    console.log('Creating calendar event with:', {
+      summary: event.summary,
+      description: event.description,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      attendees: event.attendees
+    });
+
     const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
       method: 'POST',
       headers: {
@@ -28,14 +36,23 @@ export async function createCalendarEvent(event: CalendarEvent) {
         },
         attendees: event.attendees.map(email => ({ email })),
         sendUpdates: 'all',
+        reminders: {
+          useDefault: true
+        },
+        guestsCanModify: false,
+        guestsCanInviteOthers: false,
       }),
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      throw new Error('Failed to create calendar event');
+      console.error('Calendar API Error:', data);
+      throw new Error(data.error?.message || 'Failed to create calendar event');
     }
 
-    return await response.json();
+    console.log('Calendar event created successfully:', data);
+    return data;
   } catch (error) {
     console.error('Error creating calendar event:', error);
     throw error;
