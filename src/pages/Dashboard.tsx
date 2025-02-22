@@ -30,6 +30,10 @@ interface SecretResponse {
   secret: string | null;
 }
 
+interface SecretParams {
+  name: string;
+}
+
 export default function Dashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,9 +65,9 @@ export default function Dashboard() {
     
     try {
       const { data, error } = await supabase
-        .rpc<SecretResponse>('get_secret', { name: 'ELEVENLABS_API_KEY' });
+        .rpc<SecretResponse, SecretParams>('get_secret', { name: 'ELEVENLABS_API_KEY' });
 
-      if (error || !data || !data.secret) {
+      if (error || !data || typeof data !== 'object' || !('secret' in data) || !data.secret) {
         console.error('Failed to retrieve API key:', error);
         throw new Error('Failed to retrieve API key');
       }
