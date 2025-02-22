@@ -67,27 +67,39 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
   };
 
   const storeScheduledCall = async (calendarEventId: string) => {
-    // First, get the host ID from the hosts table
+    // First, get the host ID from the hosts table using maybeSingle() instead of single()
     const { data: hostData, error: hostError } = await supabase
       .from('hosts')
       .select('id')
       .eq('email', 'hi@lucaschae.com')
-      .single();
+      .maybeSingle();
 
     if (hostError) {
       console.error('Error fetching host:', hostError);
-      throw hostError;
+      throw new Error('Failed to fetch host information');
     }
 
     if (!hostData) {
-      throw new Error('Host not found');
+      // Insert the host if it doesn't exist
+      const { data: newHost, error: insertError } = await supabase
+        .from('hosts')
+        .insert({ email: 'hi@lucaschae.com' })
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error('Error creating host:', insertError);
+        throw new Error('Failed to create host record');
+      }
+
+      hostData = newHost;
     }
 
     const { error } = await supabase
       .from('bookings')
       .insert({
         google_event_id: calendarEventId,
-        host_id: hostData.id, // Add the host_id here
+        host_id: hostData.id,
         client_email: formData.email,
         client_name: formData.name,
         meeting_date: selectedDate,
@@ -106,7 +118,7 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
 
     if (error) {
       console.error('Error storing scheduled call:', error);
-      throw error;
+      throw new Error('Failed to store booking information');
     }
   };
 
