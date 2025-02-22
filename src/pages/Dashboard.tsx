@@ -7,8 +7,9 @@ import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { ElevenLabsClient } from "elevenlabs";
+import { ElevenLabsClient, type ConversationHistoryTranscriptCommonModel } from "elevenlabs";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
 interface Booking {
   id: string;
@@ -60,7 +61,7 @@ export default function Dashboard() {
     setLoadingTranscripts(prev => ({ ...prev, [bookingId]: true }));
     
     try {
-      // Get the API key from Supabase
+      // Get the API key from Supabase with proper typing
       const { data: secretData, error } = await supabase.rpc<SecretResponse>('get_secret', {
         name: 'ELEVENLABS_API_KEY'
       });
@@ -93,10 +94,20 @@ export default function Dashboard() {
         throw new Error('No transcript found');
       }
 
-      // Update the transcript state with proper type conversion
-      const transcriptText = Array.isArray(conversationDetails.transcript) 
-        ? conversationDetails.transcript.map(t => t.text).join('\n')
-        : conversationDetails.transcript.toString();
+      // Process the transcript based on its type
+      let transcriptText = '';
+      
+      if (Array.isArray(conversationDetails.transcript)) {
+        transcriptText = conversationDetails.transcript
+          .filter((t): t is ConversationHistoryTranscriptCommonModel & { text: string } => 
+            typeof t === 'object' && t !== null && 'text' in t)
+          .map(t => t.text)
+          .join('\n');
+      } else if (typeof conversationDetails.transcript === 'string') {
+        transcriptText = conversationDetails.transcript;
+      } else {
+        transcriptText = String(conversationDetails.transcript);
+      }
 
       setTranscripts(prev => ({
         ...prev,
