@@ -1,5 +1,5 @@
 
-const CLIENT_ID = '369653276436-7qbv3o2egop5vvl810ntn0fn72jg3925.apps.googleusercontent.com'; // Your Google OAuth client ID
+const CLIENT_ID = '343076327600-thdrgnptpi95ql4gveuokqv2r5ujnr68.apps.googleusercontent.com'; // Your Google OAuth client ID
 const REDIRECT_URI = window.location.origin;
 const SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
 
