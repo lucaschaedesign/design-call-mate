@@ -1,10 +1,7 @@
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { signOut } from "@/lib/auth";
 import { CalendarIcon } from "lucide-react";
 
 interface Booking {
@@ -17,7 +14,6 @@ interface Booking {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,24 +33,13 @@ export default function Dashboard() {
     }
 
     fetchBookings();
-  }, [user]);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-booking-50 to-booking-100 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-booking-900">Dashboard</h1>
-          <Button onClick={handleSignOut} variant="outline">
-            Sign Out
-          </Button>
+          <h1 className="text-3xl font-bold text-booking-900">All Bookings</h1>
         </div>
 
         {loading ? (
