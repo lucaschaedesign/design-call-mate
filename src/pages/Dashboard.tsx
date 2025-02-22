@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -6,10 +7,8 @@ import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { ElevenLabsClient } from "elevenlabs";
 import { toast } from "sonner";
 import { isAuthenticated, initiateGoogleAuth } from "@/lib/googleAuth";
-import { Link } from "react-router-dom";
 import { VideoIcon } from "@/components/icons/VideoIcon";
 
 interface Booking {
@@ -329,10 +328,14 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <DashboardSidebar activeView={activeView} onViewChange={setActiveView} />
-      <div className="flex-1">
-        {renderContent()}
+    <div className="min-h-screen bg-[#F8F9FC] p-6">
+      <div className="flex gap-6 max-w-[1800px] mx-auto">
+        <DashboardSidebar activeView={activeView} onViewChange={setActiveView} />
+        <div className="flex-1">
+          <Card className="p-6 shadow-sm bg-white/70 backdrop-blur-sm border-white/20">
+            {renderContent()}
+          </Card>
+        </div>
       </div>
     </div>
   );
