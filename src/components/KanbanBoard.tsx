@@ -18,7 +18,8 @@ export function KanbanBoard() {
     updateTaskStatus,
     createTask,
     updateTask,
-    deleteTask
+    deleteTask,
+    refreshTasks
   } = useKanban();
 
   const [transcription, setTranscription] = useState('');
@@ -78,6 +79,9 @@ export function KanbanBoard() {
         });
       }
 
+      // Refresh the tasks list to show the new tasks
+      await refreshTasks();
+      
       toast.success('Tasks generated successfully!');
       
       // Clear the form

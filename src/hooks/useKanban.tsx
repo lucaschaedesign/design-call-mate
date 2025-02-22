@@ -23,6 +23,32 @@ export function useKanban() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchTasks = async () => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching tasks:', error);
+    } else {
+      setTasks(data);
+      setLoading(false);
+    }
+  };
+
+  const fetchStatuses = async () => {
+    const { data, error } = await supabase
+      .from('kanban_statuses')
+      .select('*')
+      .order('position');
+
+    if (error) {
+      console.error('Error fetching statuses:', error);
+    } else {
+      setStatuses(data);
+    }
+  };
+
   useEffect(() => {
     fetchStatuses();
     fetchTasks();
@@ -45,32 +71,6 @@ export function useKanban() {
       supabase.removeChannel(taskChannel);
     };
   }, []);
-
-  const fetchStatuses = async () => {
-    const { data, error } = await supabase
-      .from('kanban_statuses')
-      .select('*')
-      .order('position');
-
-    if (error) {
-      console.error('Error fetching statuses:', error);
-    } else {
-      setStatuses(data);
-    }
-  };
-
-  const fetchTasks = async () => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*');
-
-    if (error) {
-      console.error('Error fetching tasks:', error);
-    } else {
-      setTasks(data);
-      setLoading(false);
-    }
-  };
 
   const updateTaskStatus = async (taskId: string, newStatusId: string) => {
     const { error } = await supabase
@@ -122,6 +122,7 @@ export function useKanban() {
     updateTaskStatus,
     createTask,
     updateTask,
-    deleteTask
+    deleteTask,
+    refreshTasks: fetchTasks
   };
 }
