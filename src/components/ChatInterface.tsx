@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Input } from "./ui/input";
@@ -39,24 +38,24 @@ export function ChatInterface({
   const [bookingData, setBookingData] = useState<BookingData>({});
   
   useEffect(() => {
-    // Start the conversation with a friendly message
     handleInitialMessage();
   }, []);
 
   useEffect(() => {
-    // Scroll to bottom when new messages arrive
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   }, [messages]);
 
   const handleInitialMessage = async () => {
-    const initialMessage: Message = {
-      role: 'assistant',
-      content: "Hey! Looking for UX/UI design? Let's build something profitable together!",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    setMessages([initialMessage]);
+    const initialMessages: Message[] = [
+      {
+        role: 'assistant',
+        content: "Hey! I'm excited to help you create something amazing! 👋 To get started, could you tell me your business name?",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ];
+    setMessages(initialMessages);
   };
 
   const handleSend = async () => {
@@ -122,7 +121,6 @@ export function ChatInterface({
       return;
     }
     
-    // Directly send the selected option
     const userMessage: Message = {
       role: 'user',
       content: option,
@@ -275,7 +273,6 @@ export function ChatInterface({
         </form>
       </div>
 
-      {/* Date Picker Popover */}
       <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
@@ -292,7 +289,6 @@ export function ChatInterface({
         </PopoverContent>
       </Popover>
 
-      {/* Time Picker Popover */}
       <Popover open={showTimePicker} onOpenChange={setShowTimePicker}>
         <PopoverContent className="w-48">
           <Select onValueChange={handleCustomTimeSelect}>

@@ -1,15 +1,21 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, MessageSquare } from "lucide-react";
+import { User, Mail, MessageSquare, Building2, Briefcase, Calendar } from "lucide-react";
 import { createCalendarEvent, calculateEndTime, formatStartTime } from "@/lib/calendar";
 import { useToast } from "@/components/ui/use-toast";
-import { BookingData } from "@/lib/chat";
+import { BookingData, PREDEFINED_OPTIONS } from "@/lib/chat";
 import { clearAuth } from "@/lib/googleAuth";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface BookingFormProps {
   selectedDate?: string;
@@ -32,10 +38,18 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
     email: '',
     message: ''
   });
+  const [editedBookingData, setEditedBookingData] = useState<BookingData>(bookingData || {});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleBookingDataChange = (field: keyof BookingData, value: string | string[]) => {
+    setEditedBookingData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const formatEventDescription = (formData: FormData, bookingData: BookingData) => {
@@ -76,10 +90,10 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
       const startTime = formatStartTime(date, selectedTime);
       const endTime = calculateEndTime(date, selectedTime, selectedDuration);
 
-      const eventDescription = formatEventDescription(formData, bookingData || {});
+      const eventDescription = formatEventDescription(formData, editedBookingData);
 
       const response = await createCalendarEvent({
-        summary: `Discovery Call with ${formData.name} - ${bookingData?.businessName || 'New Client'}`,
+        summary: `Discovery Call with ${formData.name} - ${editedBookingData.businessName || 'New Client'}`,
         description: eventDescription,
         startTime,
         endTime,
@@ -122,35 +136,133 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
 
   return (
     <Card className="w-full max-w-4xl mx-auto p-6 mt-8 shadow-lg animate-fade-up">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <User className="w-5 h-5 text-booking-600" />
-            <h2 className="text-xl font-semibold text-booking-800">Your Information</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <Building2 className="w-5 h-5 text-blue-600" />
+            <h2 className="text-xl font-semibold text-gray-800">Project Details</h2>
           </div>
           
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="businessName">Business Name</Label>
               <Input 
-                id="name" 
-                placeholder="John Doe" 
-                value={formData.name}
-                onChange={handleChange}
-                required
+                id="businessName"
+                value={editedBookingData.businessName || ''}
+                onChange={(e) => handleBookingDataChange('businessName', e.target.value)}
+                placeholder="Your business name"
               />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="industry">Industry</Label>
+              <Select 
+                value={editedBookingData.industry} 
+                onValueChange={(value) => handleBookingDataChange('industry', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PREDEFINED_OPTIONS.industries.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="projectSize">Project Size</Label>
+              <Select 
+                value={editedBookingData.projectSize} 
+                onValueChange={(value) => handleBookingDataChange('projectSize', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select project size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PREDEFINED_OPTIONS.projectSizes.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="timeline">Timeline</Label>
+              <Select 
+                value={editedBookingData.timeline} 
+                onValueChange={(value) => handleBookingDataChange('timeline', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select timeline" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PREDEFINED_OPTIONS.timelines.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="budget">Budget Range</Label>
+              <Select 
+                value={editedBookingData.budget} 
+                onValueChange={(value) => handleBookingDataChange('budget', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select budget range" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PREDEFINED_OPTIONS.budgets.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="w-5 h-5 text-blue-600" />
+            <h2 className="text-xl font-semibold text-gray-800">Meeting Details</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Your Name</Label>
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-gray-400" />
+                <Input 
+                  id="name" 
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-booking-400" />
+                <Mail className="w-4 h-4 text-gray-400" />
                 <Input 
                   id="email" 
                   type="email" 
-                  placeholder="john@example.com" 
                   value={formData.email}
                   onChange={handleChange}
+                  placeholder="john@example.com"
                   required
                 />
               </div>
@@ -160,13 +272,13 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
           <div className="space-y-2">
             <Label htmlFor="message">Additional Notes (Optional)</Label>
             <div className="flex items-start gap-2">
-              <MessageSquare className="w-4 h-4 text-booking-400 mt-2" />
+              <MessageSquare className="w-4 h-4 text-gray-400 mt-2" />
               <Textarea
                 id="message"
-                placeholder="Share anything that will help prepare for our call..."
-                className="min-h-[100px]"
                 value={formData.message}
                 onChange={handleChange}
+                placeholder="Share anything that will help prepare for our call..."
+                className="min-h-[100px]"
               />
             </div>
           </div>
