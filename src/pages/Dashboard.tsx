@@ -57,15 +57,15 @@ export default function Dashboard() {
     
     try {
       // Get the API key from Supabase
-      const { data, error } = await supabase.rpc('get_secret', {
+      const { data: secretData, error } = await supabase.rpc('get_secret', {
         name: 'ELEVENLABS_API_KEY'
       });
 
-      if (error || !data?.secret) {
+      if (error || !secretData) {
         throw new Error('Failed to retrieve API key');
       }
 
-      const client = new ElevenLabsClient({ apiKey: data.secret });
+      const client = new ElevenLabsClient({ apiKey: secretData.secret });
 
       // Get conversations
       const conversations = await client.conversationalAi.getConversations({
@@ -73,7 +73,7 @@ export default function Dashboard() {
       });
 
       // Check if there are any conversations
-      if (!conversations || !Array.isArray(conversations.conversations) || conversations.conversations.length === 0) {
+      if (!conversations || !conversations.conversations || conversations.conversations.length === 0) {
         throw new Error('No conversations found');
       }
 
@@ -92,7 +92,7 @@ export default function Dashboard() {
       // Update the transcript state
       setTranscripts(prev => ({
         ...prev,
-        [bookingId]: conversationDetails.transcript
+        [bookingId]: conversationDetails.transcript.toString()
       }));
 
       toast.success('Transcript loaded successfully');
