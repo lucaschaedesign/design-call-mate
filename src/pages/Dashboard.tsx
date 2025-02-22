@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { ElevenLabsClient, type ConversationHistoryTranscriptCommonModel } from "elevenlabs";
+import { ElevenLabsClient } from "elevenlabs";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 
@@ -27,9 +26,7 @@ interface Booking {
   message?: string;
 }
 
-interface SecretResponse {
-  secret: string;
-}
+type GetSecretResponse = Database['public']['Functions']['get_secret']['Returns'];
 
 export default function Dashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -62,11 +59,12 @@ export default function Dashboard() {
     
     try {
       // Get the API key from Supabase with proper typing
-      const { data: secretData, error } = await supabase.rpc<SecretResponse>('get_secret', {
+      const { data: secretData, error } = await supabase.rpc<GetSecretResponse, { name: string }>('get_secret', {
         name: 'ELEVENLABS_API_KEY'
       });
 
-      if (error || !secretData) {
+      if (error || !secretData?.secret) {
+        console.error('Failed to retrieve API key:', error);
         throw new Error('Failed to retrieve API key');
       }
 
@@ -99,9 +97,8 @@ export default function Dashboard() {
       
       if (Array.isArray(conversationDetails.transcript)) {
         transcriptText = conversationDetails.transcript
-          .filter((t): t is ConversationHistoryTranscriptCommonModel & { text: string } => 
-            typeof t === 'object' && t !== null && 'text' in t)
-          .map(t => t.text)
+          .filter(t => typeof t === 'object' && t !== null && 'text' in t)
+          .map(t => t.text as string)
           .join('\n');
       } else if (typeof conversationDetails.transcript === 'string') {
         transcriptText = conversationDetails.transcript;
