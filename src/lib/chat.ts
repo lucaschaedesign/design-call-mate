@@ -15,6 +15,8 @@ export interface BookingData {
   projectSize?: string;
   timeline?: string;
   budget?: string;
+  meetingDate?: string;  // Added this property
+  meetingTime?: string;  // Added this property
 }
 
 export const PREDEFINED_OPTIONS = {
