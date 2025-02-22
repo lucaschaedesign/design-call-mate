@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
+import { KanbanBoard } from "@/components/KanbanBoard";
 import { format } from "date-fns";
 
 interface Booking {
