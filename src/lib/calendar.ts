@@ -34,6 +34,10 @@ export async function createCalendarEvent(event: CalendarEvent) {
         responseStatus: 'needsAction',
         optional: false
       })),
+      organizer: {
+        email: 'hi@lucaschae.com',
+        self: true
+      },
       sendNotifications: true,  // Added this explicit flag
       sendUpdates: 'all',
       guestsCanModify: false,
