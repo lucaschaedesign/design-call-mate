@@ -1,6 +1,6 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { addDays, format } from "https://deno.land/x/date_fns@v2.22.1/index.js";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -10,21 +10,24 @@ const corsHeaders = {
 };
 
 // Generate next 5 business days (excluding weekends)
-function getNextBusinessDays(startDate: Date, count: number): Date[] {
-  const dates: Date[] = [];
-  let currentDate = startDate;
-  
+function getNextBusinessDays(count: number): string[] {
+  const dates: string[] = [];
+  const today = new Date();
+  let currentDate = today;
+
   while (dates.length < count) {
-    currentDate = addDays(currentDate, 1);
+    currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
     if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) { // Skip weekends
-      dates.push(currentDate);
+      const month = currentDate.toLocaleString('en-US', { month: 'short' });
+      const day = currentDate.getDate();
+      const weekday = currentDate.toLocaleString('en-US', { weekday: 'short' });
+      const isoDate = currentDate.toISOString().split('T')[0];
+      dates.push({ label: `${weekday}, ${month} ${day}`, value: isoDate });
     }
   }
   
   return dates;
 }
-
-const nextDates = getNextBusinessDays(new Date(), 5);
 
 // Define the options directly in the edge function
 const PREDEFINED_OPTIONS = {
@@ -62,10 +65,7 @@ const PREDEFINED_OPTIONS = {
     { label: 'Not sure, need a quote', value: 'need_quote' }
   ],
   dates: [
-    ...nextDates.map(date => ({
-      label: format(date, 'EEE, MMM d'),
-      value: format(date, 'yyyy-MM-dd')
-    })),
+    ...getNextBusinessDays(5),
     { label: 'Custom Date', value: 'custom' }
   ],
   times: [
