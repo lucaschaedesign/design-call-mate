@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -8,7 +9,6 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ElevenLabsClient } from "elevenlabs";
 import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
 
 interface Booking {
   id: string;
@@ -26,7 +26,20 @@ interface Booking {
   message?: string;
 }
 
-type GetSecretResponse = Database['public']['Functions']['get_secret']['Returns'];
+// Define explicit types for the Supabase RPC response
+interface GetSecretParams {
+  name: string;
+}
+
+interface GetSecretResponse {
+  secret: string;
+}
+
+// Define explicit types for ElevenLabs transcript
+interface TranscriptSegment {
+  text: string;
+  [key: string]: unknown;
+}
 
 export default function Dashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -58,10 +71,10 @@ export default function Dashboard() {
     setLoadingTranscripts(prev => ({ ...prev, [bookingId]: true }));
     
     try {
-      // Get the API key from Supabase with proper typing
-      const { data: secretData, error } = await supabase.rpc<GetSecretResponse, { name: string }>('get_secret', {
-        name: 'ELEVENLABS_API_KEY'
-      });
+      const { data: secretData, error } = await supabase.rpc<GetSecretResponse, GetSecretParams>(
+        'get_secret',
+        { name: 'ELEVENLABS_API_KEY' }
+      );
 
       if (error || !secretData?.secret) {
         console.error('Failed to retrieve API key:', error);
@@ -96,9 +109,9 @@ export default function Dashboard() {
       let transcriptText = '';
       
       if (Array.isArray(conversationDetails.transcript)) {
-        transcriptText = conversationDetails.transcript
+        transcriptText = (conversationDetails.transcript as TranscriptSegment[])
           .filter(t => typeof t === 'object' && t !== null && 'text' in t)
-          .map(t => t.text as string)
+          .map(t => t.text)
           .join('\n');
       } else if (typeof conversationDetails.transcript === 'string') {
         transcriptText = conversationDetails.transcript;
