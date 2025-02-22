@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Index() {
-  const [selectedDate, setSelectedDate] = useState<string>();
+  const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
   const [selectedDuration] = useState(30);
   const [bookingData, setBookingData] = useState<BookingData>();
@@ -69,9 +69,10 @@ export default function Index() {
             onDateSelect={setSelectedDate}
             selectedTime={selectedTime}
             onTimeSelect={setSelectedTime}
+            selectedDuration={selectedDuration}
           />
           <BookingForm
-            selectedDate={selectedDate}
+            selectedDate={selectedDate?.toISOString()}
             selectedTime={selectedTime}
             selectedDuration={selectedDuration}
             bookingData={bookingData}
