@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ElevenLabsClient } from "elevenlabs";
 import { toast } from "sonner";
+import { isAuthenticated, initiateGoogleAuth } from "@/lib/googleAuth";
 
 interface Booking {
   id: string;
@@ -41,38 +42,54 @@ export default function Dashboard() {
   const [activeView, setActiveView] = useState('calls');
   const [transcripts, setTranscripts] = useState<Record<string, string>>({});
   const [loadingTranscripts, setLoadingTranscripts] = useState<Record<string, boolean>>({});
+  const [calendarConnected, setCalendarConnected] = useState(false);
 
   useEffect(() => {
-    async function fetchBookings() {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .order("meeting_date", { ascending: true });
-
-      if (error) {
-        console.error("Error fetching bookings:", error);
-      } else {
-        setBookings(data || []);
-      }
-      setLoading(false);
-    }
-
+    checkCalendarAuth();
     fetchBookings();
   }, []);
+
+  const checkCalendarAuth = () => {
+    const isCalendarAuth = isAuthenticated();
+    setCalendarConnected(isCalendarAuth);
+  };
+
+  async function fetchBookings() {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .order("meeting_date", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching bookings:", error);
+    } else {
+      setBookings(data || []);
+    }
+    setLoading(false);
+  }
+
+  const handleCalendarReconnect = () => {
+    try {
+      initiateGoogleAuth();
+    } catch (error) {
+      console.error('Failed to reconnect calendar:', error);
+      toast.error('Failed to reconnect to Google Calendar');
+    }
+  };
 
   const fetchTranscript = async (bookingId: string) => {
     setLoadingTranscripts(prev => ({ ...prev, [bookingId]: true }));
     
     try {
-      const { data, error } = await supabase
-        .rpc<SecretResponse, SecretParams>('get_secret', { name: 'ELEVENLABS_API_KEY' });
+      const { data: secretData, error: secretError } = await supabase
+        .rpc('get_secret', { name: 'ELEVENLABS_API_KEY' }) as { data: SecretResponse, error: Error | null };
 
-      if (error || !data || typeof data !== 'object' || !('secret' in data) || !data.secret) {
-        console.error('Failed to retrieve API key:', error);
+      if (secretError || !secretData || !secretData.secret) {
+        console.error('Failed to retrieve API key:', secretError);
         throw new Error('Failed to retrieve API key');
       }
 
-      const client = new ElevenLabsClient({ apiKey: data.secret });
+      const client = new ElevenLabsClient({ apiKey: secretData.secret });
 
       const conversations = await client.conversationalAi.getConversations({
         agent_id: "Niup5RvSzU7eQ7F9X4MW"
@@ -147,7 +164,24 @@ export default function Dashboard() {
         return (
           <div className="p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Settings</h2>
-            <p className="text-gray-500">Settings page coming soon...</p>
+            <div className="space-y-6">
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-medium mb-4">Calendar Integration</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Google Calendar Status</p>
+                    <p className={`text-sm font-medium ${calendarConnected ? 'text-green-600' : 'text-red-600'}`}>
+                      {calendarConnected ? 'Connected' : 'Disconnected'}
+                    </p>
+                  </div>
+                  {!calendarConnected && (
+                    <Button onClick={handleCalendarReconnect} variant="outline">
+                      Reconnect Calendar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         );
       
