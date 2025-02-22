@@ -9,6 +9,7 @@ import { createCalendarEvent, calculateEndTime, formatStartTime } from "@/lib/ca
 import { useToast } from "@/components/ui/use-toast";
 import { BookingData } from "@/lib/chat";
 import { clearAuth } from "@/lib/googleAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingFormProps {
   selectedDate?: string;
@@ -64,6 +65,31 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
     return sections.join('\n');
   };
 
+  const createBookingInSupabase = async (calendarEventId: string) => {
+    const { error } = await supabase
+      .from('bookings')
+      .insert({
+        client_name: formData.name,
+        client_email: formData.email,
+        business_name: editedBookingData.businessName,
+        industry: editedBookingData.industry,
+        project_type: Array.isArray(editedBookingData.projectType) 
+          ? editedBookingData.projectType.join(', ')
+          : editedBookingData.projectType,
+        project_size: editedBookingData.projectSize,
+        timeline: editedBookingData.timeline,
+        budget: editedBookingData.budget,
+        meeting_date: selectedDate,
+        meeting_time: selectedTime,
+        message: formData.message,
+        duration: selectedDuration,
+        google_event_id: calendarEventId,
+        host_id: (await supabase.from('hosts').select('id').single()).data?.id
+      });
+
+    if (error) throw error;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -85,15 +111,17 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
 
       const eventDescription = formatEventDescription(formData, editedBookingData);
 
-      const response = await createCalendarEvent({
+      const calendarResponse = await createCalendarEvent({
         summary: `Discovery Call with ${formData.name} - ${editedBookingData.businessName || 'New Client'}`,
         description: eventDescription,
         startTime,
         endTime,
-        attendees: [formData.email]
+        attendees: [formData.email, 'hi@lucaschae.com']
       });
 
-      console.log('Calendar event created:', response);
+      console.log('Calendar event created:', calendarResponse);
+
+      await createBookingInSupabase(calendarResponse.id);
 
       toast({
         title: "Success!",
@@ -108,16 +136,15 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
         clearAuth();
         toast({
           title: "Authentication Error",
-          description: "Your Google Calendar access has expired. Please refresh the page to reconnect.",
+          description: "Please try again. If the problem persists, contact support.",
           variant: "destructive"
         });
-        window.location.reload();
         return;
       }
 
       toast({
         title: "Booking Failed",
-        description: "There was an error scheduling your call. Please try again.",
+        description: error.message || "There was an error scheduling your call. Please try again.",
         variant: "destructive"
       });
     } finally {
