@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -6,6 +5,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { ElevenLabsClient } from "elevenlabs";
+import { toast } from "sonner";
 
 interface Booking {
   id: string;
@@ -23,11 +25,19 @@ interface Booking {
   message?: string;
 }
 
+interface ConversationResponse {
+  id: string;
+  transcript: string;
+  // ... other fields
+}
+
 export default function Dashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
   const [activeView, setActiveView] = useState('calls');
+  const [transcripts, setTranscripts] = useState<Record<string, string>>({});
+  const [loadingTranscripts, setLoadingTranscripts] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     async function fetchBookings() {
@@ -46,6 +56,53 @@ export default function Dashboard() {
 
     fetchBookings();
   }, []);
+
+  const fetchTranscript = async (bookingId: string) => {
+    setLoadingTranscripts(prev => ({ ...prev, [bookingId]: true }));
+    
+    try {
+      // Get the API key from Supabase
+      const { data: { secret: apiKey } } = await supabase.rpc('get_secret', {
+        name: 'ELEVENLABS_API_KEY'
+      });
+
+      if (!apiKey) {
+        throw new Error('API key not found');
+      }
+
+      const client = new ElevenLabsClient({ apiKey });
+
+      // Get conversations
+      const conversations = await client.conversationalAi.getConversations({
+        agent_id: "Niup5RvSzU7eQ7F9X4MW"
+      });
+
+      if (!conversations || conversations.length === 0) {
+        throw new Error('No conversations found');
+      }
+
+      // Get the latest conversation
+      const latestConversation = conversations[0];
+      
+      // Get conversation details
+      const conversationDetails: ConversationResponse = await client.conversationalAi.getConversation(
+        latestConversation.id
+      );
+
+      // Update the transcript state
+      setTranscripts(prev => ({
+        ...prev,
+        [bookingId]: conversationDetails.transcript
+      }));
+
+      toast.success('Transcript loaded successfully');
+    } catch (error) {
+      console.error('Error fetching transcript:', error);
+      toast.error('Failed to load transcript');
+    } finally {
+      setLoadingTranscripts(prev => ({ ...prev, [bookingId]: false }));
+    }
+  };
 
   const getCallStatus = (booking: Booking) => {
     const now = new Date();
@@ -91,6 +148,8 @@ export default function Dashboard() {
                   {bookings.map((booking) => {
                     const status = getCallStatus(booking);
                     const isExpanded = expandedBooking === booking.id;
+                    const isLoadingTranscript = loadingTranscripts[booking.id];
+                    const transcript = transcripts[booking.id];
 
                     return (
                       <Card key={booking.id} className="p-4">
@@ -158,7 +217,28 @@ export default function Dashboard() {
                                 </div>
                               </TabsContent>
                               <TabsContent value="transcript" className="mt-4">
-                                <p className="text-sm text-gray-500">Call transcript and summary will be added after the call.</p>
+                                {transcript ? (
+                                  <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                                    {transcript}
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <p className="text-sm text-gray-500 mb-4">
+                                      {isLoadingTranscript 
+                                        ? "Loading transcript..."
+                                        : "Call transcript and summary will be added after the call."}
+                                    </p>
+                                    {!isLoadingTranscript && !transcript && (
+                                      <Button
+                                        onClick={() => fetchTranscript(booking.id)}
+                                        variant="outline"
+                                        size="sm"
+                                      >
+                                        Get transcript
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
                               </TabsContent>
                             </Tabs>
                           </div>
