@@ -5,89 +5,68 @@ import { initiateGoogleAuth, handleAuthCallback, isAuthenticated, clearAuth } fr
 import { ChatInterface } from "@/components/ChatInterface";
 import { BookingData } from "@/lib/chat";
 import { BookingForm } from "@/components/BookingForm";
+import { signInWithGoogle } from "@/lib/auth";
+import { useAuth } from "@/components/AuthProvider";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const [authenticated, setAuthenticated] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [bookingData, setBookingData] = useState<BookingData>();
-
-  const checkAuthentication = () => {
-    const isAuth = isAuthenticated();
-    setAuthenticated(isAuth);
-    return isAuth;
-  };
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const authSuccess = handleAuthCallback();
-    if (authSuccess) {
-      setAuthenticated(true);
-    } else {
-      checkAuthentication();
+    if (user) {
+      navigate("/dashboard");
     }
+  }, [user, navigate]);
 
-    // Listen for storage changes (in case auth is cleared)
-    const handleStorageChange = () => {
-      checkAuthentication();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+    }
+  };
 
   const handleAuthError = () => {
     clearAuth();
-    setAuthenticated(false);
     setShowBookingForm(false);
   };
 
   const handleChatComplete = (data: BookingData) => {
-    if (!checkAuthentication()) {
-      initiateGoogleAuth();
-      return;
-    }
     setBookingData(data);
     setShowBookingForm(true);
   };
-
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-booking-50 to-booking-100 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-booking-900 mb-4">Book a Discovery Call</h1>
-          <p className="text-booking-600 max-w-2xl mx-auto mb-8">
-            To schedule calls, we need access to your Google Calendar.
-          </p>
-          <Button size="lg" onClick={initiateGoogleAuth}>
-            Connect with Google Calendar
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-booking-50 to-booking-100">
       <div className="container py-12">
         <div className="text-center mb-12 animate-fade-up">
           <h1 className="text-4xl font-bold text-booking-900 mb-4">Book a Discovery Call</h1>
-          <p className="text-booking-600 max-w-2xl mx-auto">
+          <p className="text-booking-600 max-w-2xl mx-auto mb-8">
             Let's discuss your project needs and how we can help bring your vision to life.
           </p>
+          <div className="flex justify-center gap-4">
+            <Button onClick={handleGoogleSignIn} size="lg">
+              Sign in with Google
+            </Button>
+          </div>
         </div>
         
-        {!showBookingForm ? (
-          <ChatInterface onComplete={handleChatComplete} />
-        ) : (
+        {showBookingForm ? (
           <BookingForm 
             selectedDate={bookingData?.meetingDate}
             selectedTime={bookingData?.meetingTime}
             selectedDuration={30}
             bookingData={bookingData}
           />
+        ) : (
+          <ChatInterface onComplete={handleChatComplete} />
         )}
       </div>
     </div>
   );
-}
+};
 
 export default Index;
