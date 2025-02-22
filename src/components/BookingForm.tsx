@@ -47,13 +47,15 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration }: Bo
       const startTime = formatStartTime(selectedDate, selectedTime);
       const endTime = calculateEndTime(selectedDate, selectedTime, selectedDuration);
 
-      await createCalendarEvent({
+      const response = await createCalendarEvent({
         summary: `Discovery Call with ${formData.name}`,
         description: formData.message || 'Initial discovery call to discuss project needs.',
         startTime,
         endTime,
-        attendees: [formData.email, 'agency@example.com'], // Replace with your agency email
+        attendees: [formData.email, 'your.email@yourdomain.com'], // Replace this with your actual email
       });
+
+      console.log('Calendar event created:', response); // Debug log
 
       toast({
         title: "Success!",
