@@ -4,18 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, MessageSquare, Building2, Briefcase, Calendar } from "lucide-react";
+import { User, Mail, MessageSquare, Building2, Calendar } from "lucide-react";
 import { createCalendarEvent, calculateEndTime, formatStartTime } from "@/lib/calendar";
 import { useToast } from "@/components/ui/use-toast";
-import { BookingData, PREDEFINED_OPTIONS } from "@/lib/chat";
+import { BookingData } from "@/lib/chat";
 import { clearAuth } from "@/lib/googleAuth";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface BookingFormProps {
   selectedDate?: string;
@@ -45,7 +38,7 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleBookingDataChange = (field: keyof BookingData, value: string | string[]) => {
+  const handleBookingDataChange = (field: keyof BookingData, value: string) => {
     setEditedBookingData(prev => ({
       ...prev,
       [field]: value
@@ -156,79 +149,57 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
             
             <div className="space-y-2">
               <Label htmlFor="industry">Industry</Label>
-              <Select 
-                value={editedBookingData.industry} 
-                onValueChange={(value) => handleBookingDataChange('industry', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PREDEFINED_OPTIONS.industries.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input 
+                id="industry"
+                value={editedBookingData.industry || ''}
+                onChange={(e) => handleBookingDataChange('industry', e.target.value)}
+                placeholder="Your industry"
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="projectSize">Project Size</Label>
-              <Select 
-                value={editedBookingData.projectSize} 
-                onValueChange={(value) => handleBookingDataChange('projectSize', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select project size" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PREDEFINED_OPTIONS.projectSizes.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input 
+                id="projectSize"
+                value={editedBookingData.projectSize || ''}
+                onChange={(e) => handleBookingDataChange('projectSize', e.target.value)}
+                placeholder="Project size"
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="timeline">Timeline</Label>
-              <Select 
-                value={editedBookingData.timeline} 
-                onValueChange={(value) => handleBookingDataChange('timeline', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select timeline" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PREDEFINED_OPTIONS.timelines.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input 
+                id="timeline"
+                value={editedBookingData.timeline || ''}
+                onChange={(e) => handleBookingDataChange('timeline', e.target.value)}
+                placeholder="Project timeline"
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="budget">Budget Range</Label>
-              <Select 
-                value={editedBookingData.budget} 
-                onValueChange={(value) => handleBookingDataChange('budget', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select budget range" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PREDEFINED_OPTIONS.budgets.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input 
+                id="budget"
+                value={editedBookingData.budget || ''}
+                onChange={(e) => handleBookingDataChange('budget', e.target.value)}
+                placeholder="Budget range"
+              />
             </div>
+
+            {editedBookingData.projectType && (
+              <div className="space-y-2">
+                <Label htmlFor="projectType">Project Type</Label>
+                <Input 
+                  id="projectType"
+                  value={Array.isArray(editedBookingData.projectType) 
+                    ? editedBookingData.projectType.join(', ')
+                    : editedBookingData.projectType || ''}
+                  onChange={(e) => handleBookingDataChange('projectType', e.target.value)}
+                  placeholder="Project type"
+                />
+              </div>
+            )}
           </div>
         </div>
 
