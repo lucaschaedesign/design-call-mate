@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -100,10 +101,10 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
         clearAuth();
         toast({
           title: "Authentication Error",
-          description: "Your session has expired. Please refresh the page to reconnect with Google Calendar.",
+          description: "Your Google Calendar access has expired. Please refresh the page to reconnect.",
           variant: "destructive"
         });
-        setTimeout(() => window.location.reload(), 2000);
+        window.location.reload();
         return;
       }
 

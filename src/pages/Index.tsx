@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { initiateGoogleAuth, handleAuthCallback, isAuthenticated } from "@/lib/googleAuth";
+import { initiateGoogleAuth, handleAuthCallback, isAuthenticated, clearAuth } from "@/lib/googleAuth";
 import { ChatInterface } from "@/components/ChatInterface";
 import { BookingData } from "@/lib/chat";
 import { BookingForm } from "@/components/BookingForm";
@@ -11,16 +11,40 @@ const Index = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [bookingData, setBookingData] = useState<BookingData>();
 
+  const checkAuthentication = () => {
+    const isAuth = isAuthenticated();
+    setAuthenticated(isAuth);
+    return isAuth;
+  };
+
   useEffect(() => {
     const authSuccess = handleAuthCallback();
     if (authSuccess) {
       setAuthenticated(true);
     } else {
-      setAuthenticated(isAuthenticated());
+      checkAuthentication();
     }
+
+    // Listen for storage changes (in case auth is cleared)
+    const handleStorageChange = () => {
+      checkAuthentication();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  const handleAuthError = () => {
+    clearAuth();
+    setAuthenticated(false);
+    setShowBookingForm(false);
+  };
+
   const handleChatComplete = (data: BookingData) => {
+    if (!checkAuthentication()) {
+      initiateGoogleAuth();
+      return;
+    }
     setBookingData(data);
     setShowBookingForm(true);
   };
