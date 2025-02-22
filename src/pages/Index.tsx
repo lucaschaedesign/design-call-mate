@@ -1,18 +1,17 @@
 
-import { BookingCalendar } from "@/components/BookingCalendar";
-import { BookingForm } from "@/components/BookingForm";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { initiateGoogleAuth, handleAuthCallback, isAuthenticated } from "@/lib/googleAuth";
+import { ChatInterface } from "@/components/ChatInterface";
+import { BookingData } from "@/lib/chat";
+import { BookingForm } from "@/components/BookingForm";
 
 const Index = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const [selectedTime, setSelectedTime] = useState<string>();
-  const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [authenticated, setAuthenticated] = useState(false);
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [bookingData, setBookingData] = useState<BookingData>();
 
   useEffect(() => {
-    // Check if this is a callback from Google OAuth
     const authSuccess = handleAuthCallback();
     if (authSuccess) {
       setAuthenticated(true);
@@ -21,9 +20,10 @@ const Index = () => {
     }
   }, []);
 
-  const handleDateSelect = (date: Date | undefined) => setSelectedDate(date);
-  const handleTimeSelect = (time: string) => setSelectedTime(time);
-  const handleDurationSelect = (duration: number) => setSelectedDuration(duration);
+  const handleChatComplete = (data: BookingData) => {
+    setBookingData(data);
+    setShowBookingForm(true);
+  };
 
   if (!authenticated) {
     return (
@@ -47,24 +47,19 @@ const Index = () => {
         <div className="text-center mb-12 animate-fade-up">
           <h1 className="text-4xl font-bold text-booking-900 mb-4">Book a Discovery Call</h1>
           <p className="text-booking-600 max-w-2xl mx-auto">
-            Schedule a personalized consultation with our design team. We'll discuss your project needs and how we can help bring your vision to life.
+            Let's discuss your project needs and how we can help bring your vision to life.
           </p>
         </div>
         
-        <BookingCalendar 
-          selectedDate={selectedDate}
-          selectedTime={selectedTime}
-          selectedDuration={selectedDuration}
-          onDateSelect={handleDateSelect}
-          onTimeSelect={handleTimeSelect}
-          onDurationSelect={handleDurationSelect}
-        />
-        
-        <BookingForm 
-          selectedDate={selectedDate}
-          selectedTime={selectedTime}
-          selectedDuration={selectedDuration}
-        />
+        {!showBookingForm ? (
+          <ChatInterface onComplete={handleChatComplete} />
+        ) : (
+          <BookingForm 
+            selectedDate={undefined}
+            selectedTime={undefined}
+            selectedDuration={30}
+          />
+        )}
       </div>
     </div>
   );
