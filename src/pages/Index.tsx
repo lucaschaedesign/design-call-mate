@@ -68,7 +68,7 @@ export default function Index() {
             selectedDate={selectedDate}
             onDateSelect={setSelectedDate}
             selectedTime={selectedTime}
-            onTimeSelect={setTimeSelect}
+            onTimeSelect={setSelectedTime}
             selectedDuration={selectedDuration}
             onDurationSelect={setSelectedDuration}
           />
