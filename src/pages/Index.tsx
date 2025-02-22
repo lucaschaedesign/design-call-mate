@@ -1,93 +1,83 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { initiateGoogleAuth, handleAuthCallback, isAuthenticated, clearAuth } from "@/lib/googleAuth";
+import { useEffect, useState } from "react";
+import { BookingCalendar } from "@/components/BookingCalendar";
 import { ChatInterface } from "@/components/ChatInterface";
-import { BookingData } from "@/lib/chat";
 import { BookingForm } from "@/components/BookingForm";
+import { BookingData } from "@/lib/chat";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
-const Index = () => {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [showBookingForm, setShowBookingForm] = useState(false);
+export default function Index() {
+  const [selectedDate, setSelectedDate] = useState<string>();
+  const [selectedTime, setSelectedTime] = useState<string>();
+  const [selectedDuration] = useState(30);
   const [bookingData, setBookingData] = useState<BookingData>();
-
-  const checkAuthentication = () => {
-    const isAuth = isAuthenticated();
-    setAuthenticated(isAuth);
-    return isAuth;
-  };
+  const [showForm, setShowForm] = useState(false);
+  const [isHost, setIsHost] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const authSuccess = handleAuthCallback();
-    if (authSuccess) {
-      setAuthenticated(true);
-    } else {
-      checkAuthentication();
-    }
-
-    // Listen for storage changes (in case auth is cleared)
-    const handleStorageChange = () => {
-      checkAuthentication();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    checkIfHost();
   }, []);
 
-  const handleAuthError = () => {
-    clearAuth();
-    setAuthenticated(false);
-    setShowBookingForm(false);
+  const checkIfHost = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: hostData } = await supabase
+        .from('hosts')
+        .select('*')
+        .single();
+      
+      if (hostData) {
+        setIsHost(true);
+      }
+    }
+  };
+
+  const handleSignInWithGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`
+      }
+    });
   };
 
   const handleChatComplete = (data: BookingData) => {
-    if (!checkAuthentication()) {
-      initiateGoogleAuth();
-      return;
-    }
     setBookingData(data);
-    setShowBookingForm(true);
+    setShowForm(true);
   };
 
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-booking-50 to-booking-100 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-booking-900 mb-4">Book a Discovery Call</h1>
-          <p className="text-booking-600 max-w-2xl mx-auto mb-8">
-            To schedule calls, we need access to your Google Calendar.
-          </p>
-          <Button size="lg" onClick={initiateGoogleAuth}>
-            Connect with Google Calendar
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-booking-50 to-booking-100">
-      <div className="container py-12">
-        <div className="text-center mb-12 animate-fade-up">
-          <h1 className="text-4xl font-bold text-booking-900 mb-4">Book a Discovery Call</h1>
-          <p className="text-booking-600 max-w-2xl mx-auto">
-            Let's discuss your project needs and how we can help bring your vision to life.
-          </p>
-        </div>
-        
-        {!showBookingForm ? (
-          <ChatInterface onComplete={handleChatComplete} />
+    <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Book a Discovery Call</h1>
+        {isHost ? (
+          <Button onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
         ) : (
-          <BookingForm 
-            selectedDate={bookingData?.meetingDate}
-            selectedTime={bookingData?.meetingTime}
-            selectedDuration={30}
-            bookingData={bookingData}
-          />
+          <Button onClick={handleSignInWithGoogle}>Host Sign In</Button>
         )}
       </div>
+
+      {!showForm ? (
+        <ChatInterface onComplete={handleChatComplete} />
+      ) : (
+        <div className="space-y-8">
+          <BookingCalendar
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            selectedTime={selectedTime}
+            onTimeSelect={setSelectedTime}
+          />
+          <BookingForm
+            selectedDate={selectedDate}
+            selectedTime={selectedTime}
+            selectedDuration={selectedDuration}
+            bookingData={bookingData}
+          />
+        </div>
+      )}
     </div>
   );
 }
-
-export default Index;
