@@ -39,13 +39,6 @@ export async function createCalendarEvent(event: CalendarEvent) {
           responseStatus: 'needsAction'
         })),
         sendUpdates: 'all',
-        reminders: {
-          useDefault: true,
-          overrides: [
-            { method: 'email', minutes: 24 * 60 }, // 24 hours before
-            { method: 'popup', minutes: 30 } // 30 minutes before
-          ]
-        },
         guestsCanModify: false,
         guestsCanInviteOthers: false,
         conferenceData: {
