@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -66,10 +67,27 @@ export function BookingForm({ selectedDate, selectedTime, selectedDuration, book
   };
 
   const storeScheduledCall = async (calendarEventId: string) => {
+    // First, get the host ID from the hosts table
+    const { data: hostData, error: hostError } = await supabase
+      .from('hosts')
+      .select('id')
+      .eq('email', 'hi@lucaschae.com')
+      .single();
+
+    if (hostError) {
+      console.error('Error fetching host:', hostError);
+      throw hostError;
+    }
+
+    if (!hostData) {
+      throw new Error('Host not found');
+    }
+
     const { error } = await supabase
       .from('bookings')
       .insert({
         google_event_id: calendarEventId,
+        host_id: hostData.id, // Add the host_id here
         client_email: formData.email,
         client_name: formData.name,
         meeting_date: selectedDate,
