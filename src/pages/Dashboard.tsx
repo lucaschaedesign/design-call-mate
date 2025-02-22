@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -23,6 +24,10 @@ interface Booking {
   budget?: string;
   timeline?: string;
   message?: string;
+}
+
+interface SecretResponse {
+  secret: string | null;
 }
 
 export default function Dashboard() {
@@ -56,9 +61,9 @@ export default function Dashboard() {
     
     try {
       const { data, error } = await supabase
-        .rpc('get_secret', { name: 'ELEVENLABS_API_KEY' });
+        .rpc<SecretResponse>('get_secret', { name: 'ELEVENLABS_API_KEY' });
 
-      if (error || !data?.secret) {
+      if (error || !data || !data.secret) {
         console.error('Failed to retrieve API key:', error);
         throw new Error('Failed to retrieve API key');
       }
