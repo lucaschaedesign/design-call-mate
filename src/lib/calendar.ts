@@ -29,23 +29,28 @@ export async function createCalendarEvent(event: CalendarEvent) {
         dateTime: event.endTime,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
-      attendees: event.attendees.map(email => ({ 
-        email,
-        responseStatus: 'needsAction',
-        optional: false
-      })),
-      organizer: {
-        email: 'hi@lucaschae.com',
-        self: true
-      },
-      sendNotifications: true,  // Added this explicit flag
+      attendees: [
+        {
+          email: event.attendees[0], // Form contact email
+          responseStatus: 'needsAction',
+          optional: false
+        },
+        {
+          email: 'hi@lucaschae.com',
+          responseStatus: 'needsAction',
+          optional: false,
+          additionalGuests: 0
+        }
+      ],
+      sendNotifications: true,
       sendUpdates: 'all',
       guestsCanModify: false,
       guestsCanInviteOthers: false,
       reminders: {
-        useDefault: false,
+        useDefault: true,
         overrides: [
-          { method: 'email', minutes: 10 }
+          { method: 'email', minutes: 10 },
+          { method: 'popup', minutes: 10 }
         ]
       },
       conferenceData: {
