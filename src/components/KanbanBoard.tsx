@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function KanbanBoard() {
   const { 
@@ -37,36 +39,53 @@ export function KanbanBoard() {
   };
 
   const handleGenerateTasks = async () => {
+    if (!transcription.trim()) {
+      toast.error('Please enter a transcription');
+      return;
+    }
+
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/generate-tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const { data, error } = await supabase.functions.invoke('generate-tasks', {
+        body: { 
           transcription,
           deadline 
-        }),
+        },
       });
 
-      const data = await response.json();
-      
+      if (error) throw error;
+
+      console.log('Generated tasks:', data);
+
+      if (!data.tasks || !Array.isArray(data.tasks)) {
+        throw new Error('Invalid response format from task generation');
+      }
+
       // Create tasks from the generated data
+      const firstStatusId = statuses[0]?.id;
+      if (!firstStatusId) {
+        throw new Error('No status columns available');
+      }
+
       for (const taskData of data.tasks) {
         await createTask({
           title: taskData.title,
           description: taskData.description,
-          status_id: statuses[0].id, // Put in first column (To Do)
+          status_id: firstStatusId,
           due_date: deadline || null,
           assignee: null,
           date_completed: null
         });
       }
 
+      toast.success('Tasks generated successfully!');
+      
       // Clear the form
       setTranscription('');
       setDeadline('');
     } catch (error) {
       console.error('Error generating tasks:', error);
+      toast.error('Failed to generate tasks: ' + (error.message || 'Unknown error'));
     } finally {
       setIsGenerating(false);
     }
