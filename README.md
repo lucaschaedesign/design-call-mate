@@ -1,69 +1,50 @@
-# Welcome to your Lovable project
-
-## Project info
-
-**URL**: https://lovable.dev/projects/827314a8-35f2-4248-9830-75f1b9c2b0c8
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/827314a8-35f2-4248-9830-75f1b9c2b0c8) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/827314a8-35f2-4248-9830-75f1b9c2b0c8) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+1. **Project name**
+    
+    PrintMoneyAI - Design More, Meet Less
+    
+2. **Elevator pitch**
+    
+    PrintMoneyAI is an AI agent that transforms how design agencies handle client communication. While agencies understand their business, most clients struggle to articulate their digital product needs clearly. We automate the entire pre-contract process - from discovery calls to project scoping - through AI-powered conversations.
+    Our AI agent conducts in-depth discovery sessions using natural voice interaction powered by ElevenLabs, intelligently captures requirements, and automatically generates structured project scopes. This eliminates countless hours of initial meetings - agencies receive qualified leads and detailed project plans while focusing on their core design work, and clients get comprehensive documentation that speeds up deal closure.🚀
+    
+    PrintMoneyAI is an AI agent that automates the pre-contract process for design agencies. Through AI-powered voice conversations using ElevenLabs, it conducts discovery sessions, captures requirements, and generates structured project scopes. This eliminates hours of initial meetings - agencies can focus on design work while receiving qualified leads and detailed plans, and clients get comprehensive documentation for faster deal closure.🚀
+    
+4. **About the project (what inspired you, what you learned, how you built, and the challenges..~)**
+    
+    ### **📌 About the Project – AI Agent for Design Agencies**
+    
+    While operating a design agency and working as freelance designers, we realized that **communication with clients is the biggest inefficiency**. So we decided to create an **AI agent that we can use ourselves**.
+    
+    PrintMoneyAI is an **AI agent for design agencies**. It communicates with clients, organizes project scope, and automatically handles the process up to contract signing. The **AI assists from the moment a client first lands until the contract is signed**.
+    
+    ### **🚨 Problem to Solve: Clients Don't Know What They Want**
+    
+    ✅ Most clients **understand their business but lack understanding of digital products like web and apps**. 
+    
+    ✅ They often **can't clearly define project scope, budget, and timeline**, requiring agencies to explain everything step by step.
+    
+    ### **👉 PrintMoneyAI's Solution**
+    
+    PrintMoneyAI eliminates manual discovery calls and project scoping. Through AI chat, it automatically schedules client meetings, then conducts in-depth discovery sessions using an AI voice agent powered by ElevenLabs. Clients discuss their needs directly with the AI, which intelligently captures requirements and automatically converts conversations into detailed project scopes and task breakdowns. Agencies get qualified leads and structured project plans without spending hours in discovery calls, while clients receive comprehensive project documentation that speeds up deal closure.
+    
+    ### **🎯 Our Goals**
+    
+    ✅ Create an **AI agent for agencies** that we use ourselves. 
+    
+    ✅ Let **AI communicate with clients and automatically organize projects** to reduce unnecessary meetings. 
+    
+    ✅ **Automate the process from initial client landing to deal closures.**
+    
+    ✅ **Reduce agencies' sales burden and increase project progression speed.**
+    
+    ### 🔥 How we built
+    
+    On the development side, we mainly relied on Lovable to generate the website code, which allowed us to build much faster than normal. We were really surprised and impressed that Lovable was able to build and debug 90% of the website by itself; we didn’t have to open our own code editors until the last two hours. 
+    
+    However, eventually the website became sophisticated enough that there were API errors Lovable couldn’t fix on its own, so we had to get our hands dirty to get to the finish line. Luckily, Lovable makes it really easy to publish to GitHub and seamlessly synchronizes generated changes with manual commits. By building out quickly with Lovable and using human engineering for the last mile, we were able to create a fully-featured website in a matter of hours.
+    
+    The UXUI of PrintMoneyAI focused on replicating the actual client communication process, with a simple UI that minimizes the learning curve and demonstrates immediate work efficiency.
+    
+    The key innovation is eliminating pre-contract client meetings, as our AI agent handles everything from initial consultation to project scoping and quote calculation. We discovered that client meetings follow predictable patterns, which allowed us to automate the process. The workflow starts with exchanging basic information, followed by AI-led detailed discussions using Elevenlabs for natural voice interaction, and finally moving to the contract phase when the client is ready.
+    
+    This automation frees designers to focus on their core creative work instead of sales and consultations, while our UI reflects agencies' creative nature through diverse icons and colors.
