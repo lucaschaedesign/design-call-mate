@@ -1,37 +1,18 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { initiateGoogleAuth, handleAuthCallback, isAuthenticated, clearAuth } from "@/lib/googleAuth";
 import { ChatInterface } from "@/components/ChatInterface";
 import { BookingData } from "@/lib/chat";
 import { BookingForm } from "@/components/BookingForm";
-import { signInWithGoogle } from "@/lib/auth";
-import { useAuth } from "@/components/AuthProvider";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [bookingData, setBookingData] = useState<BookingData>();
-  const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
-
-  const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
-    }
-  };
-
-  const handleAuthError = () => {
-    clearAuth();
-    setShowBookingForm(false);
+  const handleGoToDashboard = () => {
+    navigate("/dashboard");
   };
 
   const handleChatComplete = (data: BookingData) => {
@@ -48,8 +29,8 @@ const Index = () => {
             Let's discuss your project needs and how we can help bring your vision to life.
           </p>
           <div className="flex justify-center gap-4">
-            <Button onClick={handleGoogleSignIn} size="lg">
-              Sign in with Google
+            <Button onClick={handleGoToDashboard} size="lg">
+              Go to Dashboard
             </Button>
           </div>
         </div>
