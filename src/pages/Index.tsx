@@ -1,11 +1,20 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { BookingCalendar } from "@/components/BookingCalendar";
+import { BookingForm } from "@/components/BookingForm";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gradient-to-b from-booking-50 to-booking-100">
+      <div className="container py-12">
+        <div className="text-center mb-12 animate-fade-up">
+          <h1 className="text-4xl font-bold text-booking-900 mb-4">Book a Discovery Call</h1>
+          <p className="text-booking-600 max-w-2xl mx-auto">
+            Schedule a personalized consultation with our design team. We'll discuss your project needs and how we can help bring your vision to life.
+          </p>
+        </div>
+        
+        <BookingCalendar />
+        <BookingForm />
       </div>
     </div>
   );
