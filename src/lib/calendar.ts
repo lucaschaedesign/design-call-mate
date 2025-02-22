@@ -31,12 +31,19 @@ export async function createCalendarEvent(event: CalendarEvent) {
       },
       attendees: event.attendees.map(email => ({ 
         email,
-        responseStatus: 'needsAction'
+        responseStatus: 'needsAction',
+        optional: false
       })),
       sendNotifications: true,  // Added this explicit flag
       sendUpdates: 'all',
       guestsCanModify: false,
       guestsCanInviteOthers: false,
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: 'email', minutes: 10 }
+        ]
+      },
       conferenceData: {
         createRequest: {
           requestId: Date.now().toString(),
