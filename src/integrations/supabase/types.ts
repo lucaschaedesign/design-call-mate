@@ -174,7 +174,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_secret: {
+        Args: {
+          name: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       booking_status: "pending" | "confirmed" | "cancelled"
