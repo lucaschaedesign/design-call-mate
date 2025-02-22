@@ -1,8 +1,17 @@
 
 import { BookingCalendar } from "@/components/BookingCalendar";
 import { BookingForm } from "@/components/BookingForm";
+import { useState } from "react";
 
 const Index = () => {
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState<string>();
+  const [selectedDuration, setSelectedDuration] = useState<number>(30);
+
+  const handleDateSelect = (date: Date | undefined) => setSelectedDate(date);
+  const handleTimeSelect = (time: string) => setSelectedTime(time);
+  const handleDurationSelect = (duration: number) => setSelectedDuration(duration);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-booking-50 to-booking-100">
       <div className="container py-12">
@@ -13,8 +22,20 @@ const Index = () => {
           </p>
         </div>
         
-        <BookingCalendar />
-        <BookingForm />
+        <BookingCalendar 
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+          selectedDuration={selectedDuration}
+          onDateSelect={handleDateSelect}
+          onTimeSelect={handleTimeSelect}
+          onDurationSelect={handleDurationSelect}
+        />
+        
+        <BookingForm 
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+          selectedDuration={selectedDuration}
+        />
       </div>
     </div>
   );

@@ -15,11 +15,23 @@ const durations = [
   { label: "60 minutes", value: 60 },
 ];
 
-export function BookingCalendar() {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
-  const [selectedTime, setSelectedTime] = React.useState<string>();
-  const [selectedDuration, setSelectedDuration] = React.useState<number>(30);
+interface BookingCalendarProps {
+  selectedDate?: Date;
+  selectedTime?: string;
+  selectedDuration: number;
+  onDateSelect: (date: Date | undefined) => void;
+  onTimeSelect: (time: string) => void;
+  onDurationSelect: (duration: number) => void;
+}
 
+export function BookingCalendar({
+  selectedDate,
+  selectedTime,
+  selectedDuration,
+  onDateSelect,
+  onTimeSelect,
+  onDurationSelect
+}: BookingCalendarProps) {
   return (
     <div className="w-full max-w-4xl mx-auto p-6 animate-fade-in">
       <div className="grid md:grid-cols-2 gap-8">
@@ -30,8 +42,8 @@ export function BookingCalendar() {
           </div>
           <Calendar
             mode="single"
-            selected={date}
-            onSelect={setDate}
+            selected={selectedDate}
+            onSelect={onDateSelect}
             className="rounded-md border shadow-sm"
           />
         </Card>
@@ -48,7 +60,7 @@ export function BookingCalendar() {
                   key={time}
                   variant={selectedTime === time ? "default" : "outline"}
                   className="w-full"
-                  onClick={() => setSelectedTime(time)}
+                  onClick={() => onTimeSelect(time)}
                 >
                   {time}
                 </Button>
@@ -64,7 +76,7 @@ export function BookingCalendar() {
                   key={duration.value}
                   variant={selectedDuration === duration.value ? "default" : "outline"}
                   className="w-full"
-                  onClick={() => setSelectedDuration(duration.value)}
+                  onClick={() => onDurationSelect(duration.value)}
                 >
                   {duration.label}
                 </Button>
