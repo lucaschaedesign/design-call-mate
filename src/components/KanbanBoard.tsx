@@ -36,7 +36,15 @@ export function KanbanBoard() {
     const taskId = result.draggableId;
     const newStatusId = result.destination.droppableId;
     
-    await updateTaskStatus(taskId, newStatusId);
+    try {
+      await updateTaskStatus(taskId, newStatusId);
+      await refreshTasks(); // Refresh the tasks after successful update
+      toast.success('Task moved successfully');
+    } catch (error) {
+      console.error('Error moving task:', error);
+      toast.error('Failed to move task');
+      await refreshTasks(); // Refresh to ensure UI is in sync with backend
+    }
   };
 
   const handleGenerateTasks = async () => {
