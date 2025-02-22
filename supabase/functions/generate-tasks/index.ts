@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,27 +27,53 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a task extraction assistant. Given a transcription, extract specific, actionable tasks.
-              Return them as a JSON array of objects with 'title' and 'description' fields.
-              Each task should be clear and specific. If a deadline is provided, consider it when analyzing the tasks.`
+            content: `You are a task extraction assistant. Analyze the given transcription and extract actionable tasks.
+              Format your response as a JSON array of tasks, where each task has 'title' and 'description' fields.
+              For example:
+              [
+                {
+                  "title": "Build Landing Page",
+                  "description": "Create the main landing page with company information"
+                }
+              ]
+              Each task should be clear, specific, and directly related to the project discussed.`
           },
           {
             role: 'user',
             content: `Transcription: ${transcription}\n${deadline ? `Deadline: ${deadline}` : ''}`
           }
         ],
+        response_format: { type: "json_object" }
       }),
     })
 
     const data = await response.json()
-    const tasks = JSON.parse(data.choices[0].message.content)
+    console.log('OpenAI response:', data)
+
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from OpenAI')
+    }
+
+    let tasks
+    try {
+      const content = data.choices[0].message.content
+      // Parse the content as JSON, expecting a { tasks: [] } structure
+      const parsed = JSON.parse(content)
+      tasks = Array.isArray(parsed) ? parsed : (parsed.tasks || [])
+    } catch (e) {
+      console.error('Error parsing OpenAI response:', e)
+      throw new Error('Failed to parse tasks from OpenAI response')
+    }
 
     return new Response(JSON.stringify({ tasks }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
     console.error('Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      tasks: [] 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
