@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { isAuthenticated, initiateGoogleAuth } from "@/lib/googleAuth";
 import { VideoIcon } from "@/components/icons/VideoIcon";
+import { Task as KanbanTask } from '@/hooks/useKanban';
 
 interface Booking {
   id: string;
@@ -29,11 +30,21 @@ interface Booking {
 }
 
 interface SecretResponse {
-  secret: string | null;
+  data: string | null;
 }
 
 interface SecretParams {
-  name: string;
+  secret_name: string;
+}
+
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status_id: string;
+  due_date: string | null;
+  assignee: string | null;
+  date_completed: string | null;
 }
 
 export default function Dashboard() {
@@ -44,6 +55,7 @@ export default function Dashboard() {
   const [transcripts, setTranscripts] = useState<Record<string, string>>({});
   const [loadingTranscripts, setLoadingTranscripts] = useState<Record<string, boolean>>({});
   const [calendarConnected, setCalendarConnected] = useState(false);
+  const [tasks, setTasks] = useState<KanbanTask[]>([]);
 
   useEffect(() => {
     checkCalendarAuth();
@@ -84,44 +96,41 @@ export default function Dashboard() {
     try {
       const API_KEY = 'sk_49c62954bcb37646b9658ffa06c4794a32416af7b34090c4';
       const AGENT_ID = 'Niup5RvSzU7eQ7F9X4MW';
-      const CONVERSATION_ID = '3OOuCvfy8iIrJTc4Qu7L';
 
-      // First, fetch conversations
-      const conversationsResponse = await fetch(
-        `https://api.elevenlabs.io/v1/convai/conversations?agent_id=${AGENT_ID}`,
-        {
-          headers: {
-            'xi-api-key': API_KEY,
-          },
-        }
-      );
+      // Create ElevenLabs client
+      const client = new ElevenLabsClient({ apiKey: API_KEY });
 
-      if (!conversationsResponse.ok) {
-        throw new Error('Failed to fetch conversations');
+      // Get all conversations
+      const response = await client.conversationalAi.getConversations({
+        agent_id: AGENT_ID
+      });
+
+      console.log('API Response:', response);
+
+      // Access the conversations array from the response
+      const conversations = response.conversations;
+      console.log('All conversations:', conversations);
+
+      if (!conversations || conversations.length === 0) {
+        throw new Error('No conversations found');
       }
 
-      const conversationsData = await conversationsResponse.json();
-      
-      // Then fetch the specific conversation details
-      const conversationResponse = await fetch(
-        `https://api.elevenlabs.io/v1/convai/conversations/${CONVERSATION_ID}`,
-        {
-          headers: {
-            'xi-api-key': API_KEY,
-          },
-        }
-      );
+      // Get the latest conversation
+      const latestConversation = conversations[0]; // Assuming conversations are sorted by date
+      console.log('Latest conversation:', latestConversation);
 
-      if (!conversationResponse.ok) {
-        throw new Error('Failed to fetch conversation details');
-      }
-
-      const conversationData = await conversationResponse.json();
+      // Get the detailed conversation data
+      const conversationData = await client.conversationalAi.getConversation(latestConversation.conversation_id);
       console.log('Conversation Data:', conversationData);
       
+      // Generate tasks from the transcript
+      if (conversationData.transcript) {
+        await handleGenerateTasks(conversationData.transcript);
+      }
+      
       // Format the conversation into a readable transcript
-      let transcriptText = conversationData.transcript  // Access the transcript array
-        .filter((message: any) => message.message !== null) // Filter out null messages
+      let transcriptText = conversationData.transcript
+        .filter((message: any) => message.message !== null)
         .map((message: any) => {
           const role = message.role === 'agent' ? 'Agent' : 'Client';
           return `${role}: ${message.message}`;
@@ -161,10 +170,122 @@ export default function Dashboard() {
     }
   };
 
+  const handleGenerateTasks = async (transcript: any[]) => {
+    try {
+      console.log('Starting task generation with transcript:', transcript);
+      
+      const OPENAI_API_KEY = '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';
+
+      const conversationText = transcript
+        .map(msg => `${msg.role}: ${msg.message}`)
+        .join('\n');
+      
+      console.log('Conversation text prepared:', conversationText);
+
+      // First, get the 'todo' status ID from the KanbanBoard
+      const { data: statusesData } = await supabase
+        .from('kanban_statuses')
+        .select('*')
+        .eq('name', 'To Do')
+        .single();
+
+      if (!statusesData) {
+        throw new Error('Could not find To Do status');
+      }
+
+      const todoStatusId = statusesData.id;
+      console.log('Todo status ID:', todoStatusId);
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: "You are a detailed task extractor. Extract AT LEAST 10 specific, actionable tasks from the conversation transcript. Break down large tasks into smaller subtasks. Your response must be ONLY a valid JSON array. Each object must have exactly these fields: title (string), description (string). Make tasks specific and actionable. Do not include any markdown formatting or additional text. Example format: [{\"title\":\"Task 1\",\"description\":\"Description 1\"}]"
+            },
+            {
+              role: "user",
+              content: `Extract detailed tasks from this conversation. Remember to break down large tasks into smaller, manageable subtasks:\n${conversationText}`
+            }
+          ],
+          temperature: 0.7, // Add some creativity
+          max_tokens: 2000  // Allow for longer response
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('OpenAI API error:', errorData);
+        throw new Error('Failed to generate tasks');
+      }
+
+      const data = await response.json();
+      console.log('OpenAI response:', data);
+      
+      let generatedTasks;
+      try {
+        const content = data.choices[0].message.content.trim();
+        const cleanContent = content.replace(/```json\n?|\n?```/g, '');
+        generatedTasks = JSON.parse(cleanContent);
+        
+        if (!Array.isArray(generatedTasks)) {
+          throw new Error('Response is not an array');
+        }
+        
+        console.log('Generated tasks:', generatedTasks);
+      } catch (parseError) {
+        console.error('Failed to parse OpenAI response:', parseError);
+        console.log('Raw content:', data.choices[0].message.content);
+        throw new Error('Invalid task format returned from OpenAI');
+      }
+
+      // Insert tasks into the database
+      const { data: insertedTasks, error: insertError } = await supabase
+        .from('tasks')
+        .insert(
+          generatedTasks.map(task => ({
+            title: task.title,
+            description: task.description,
+            status_id: todoStatusId,
+            assignee: null,
+            due_date: null,
+            date_completed: null
+          }))
+        )
+        .select();
+
+      if (insertError) {
+        console.error('Error inserting tasks:', insertError);
+        throw new Error('Failed to save tasks');
+      }
+
+      console.log('Inserted tasks:', insertedTasks);
+
+      // Update tasks state with the newly inserted tasks
+      setTasks(prevTasks => {
+        const newTasks = [...prevTasks, ...insertedTasks];
+        console.log('Updated tasks state:', newTasks);
+        return newTasks;
+      });
+
+      toast.success('Tasks generated successfully');
+
+    } catch (error) {
+      console.error('Error generating tasks:', error);
+      toast.error('Failed to generate tasks');
+    }
+  };
+
   const renderContent = () => {
     switch (activeView) {
       case 'boards':
-        return <KanbanBoard />;
+        return <KanbanBoard tasks={tasks} setTasks={setTasks} />;
       
       case 'settings':
         return (
